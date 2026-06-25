@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "fastapi-expert": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "skillPath": "skills/fastapi-expert/SKILL.md",
+      "computedHash": "eb70cfcb3a06badfbdf51262ecb31b868a983963b9d6654e02856752828b312f"
+    },
+    "frontend-design": {
+      "source": "buildermethods/design-os",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/frontend-design/SKILL.md",
+      "computedHash": "ef27b958d3a46961a63a15fcb55de729d447d34e8cc868d46679f47b2ab31573"
+    },
+    "react-native-expert": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-native-expert/SKILL.md",
+      "computedHash": "f617f83be990728fef1ea2192c9b8ae85ef2c362e97f18782438f8bab357b02a"
+    }
+  }
+}

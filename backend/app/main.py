@@ -1,0 +1,68 @@
+import logging
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.config import settings
+from app.middleware.error_handler import error_handler_middleware
+from app.routers import (
+    adjustments,
+    arrivals,
+    audit_logs,
+    auth,
+    bean_types,
+    dashboard,
+    reports,
+    sales,
+    storages,
+    users,
+)
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Error handler
+app.middleware("http")(error_handler_middleware)
+
+# Routers
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(bean_types.router)
+app.include_router(arrivals.router)
+app.include_router(sales.router)
+app.include_router(storages.router)
+app.include_router(adjustments.router)
+app.include_router(dashboard.router)
+app.include_router(reports.router)
+app.include_router(audit_logs.router)
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "version": settings.APP_VERSION}
+
+
+@app.on_event("startup")
+async def startup():
+    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    logger.info("Shutting down application")

@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"]
+    },
+    "postgres": {
+      "command": "uvx",
+      "args": ["mcp-server-postgres", "postgresql://localhost:5432/beans_inventory"]
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch"]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/mnt/d/VibeCodeToursBootcamp/Beans-Inventory"]
+    },
+    "web-search": {
+      "command": "npx",
+      "args": ["-y", "mcp-duckduckgo"]
+    }
+  }
+}
