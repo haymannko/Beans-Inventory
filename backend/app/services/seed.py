@@ -7,7 +7,7 @@ from sqlalchemy import select
 from app.db.engine import async_session_factory
 from app.models.bean_type import BeanType
 from app.models.user import User, UserRole
-from app.services.auth_service import hash_password
+from app.services.auth_service import hash_password, verify_password
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +33,27 @@ async def seed_if_empty():
     async with async_session_factory() as session:
         # Check if admin user exists
         result = await session.execute(select(User).where(User.username == "admin"))
-        if result.scalar_one_or_none() is not None:
-            logger.info("Database already seeded, skipping")
-            return
+        admin = result.scalar_one_or_none()
+
+        if admin is not None:
+            # Verify admin password hash is valid (fix broken passlib hashes)
+            try:
+                verify_password("admin123", admin.password_hash)
+                logger.info("Database already seeded, skipping")
+                return
+            except Exception:
+                logger.warning("Admin password hash is broken, resetting all passwords...")
+                # Reset all user passwords
+                all_users = await session.execute(select(User))
+                for user in all_users.scalars().all():
+                    for user_data in USERS:
+                        if user.username == user_data["username"]:
+                            user.password_hash = hash_password(user_data["password"])
+                            session.add(user)
+                            logger.info(f"Reset password for user: {user.username}")
+                await session.commit()
+                logger.info("Password reset complete")
+                return
 
         logger.info("Seeding database...")
 
