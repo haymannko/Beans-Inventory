@@ -55,7 +55,16 @@ app.include_router(audit_logs.router)
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "version": settings.APP_VERSION}
+    from sqlalchemy import func, select
+    from app.db.engine import async_session_factory
+    from app.models.user import User
+    try:
+        async with async_session_factory() as session:
+            count = await session.scalar(select(func.count()).select_from(User))
+        db_status = f"ok, {count} users"
+    except Exception as e:
+        db_status = f"error: {e}"
+    return {"status": "ok", "version": settings.APP_VERSION, "db": db_status}
 
 
 @app.on_event("startup")

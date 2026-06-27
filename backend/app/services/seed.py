@@ -31,14 +31,17 @@ USERS = [
 async def seed_if_empty():
     """Seed default users and bean types if the database is empty."""
     async with async_session_factory() as session:
-        # Check if users already exist
-        result = await session.execute(select(User).limit(1))
+        # Check if admin user exists
+        result = await session.execute(select(User).where(User.username == "admin"))
         if result.scalar_one_or_none() is not None:
             logger.info("Database already seeded, skipping")
             return
 
+        logger.info("Seeding database...")
+
         # Seed users
         for user_data in USERS:
+            logger.info(f"Creating user: {user_data['username']}")
             user = User(
                 username=user_data["username"],
                 password_hash=hash_password(user_data["password"]),
