@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:match*",
-      "destination": "https://backend-nine-gamma-26.vercel.app/api/:match*"
+      "destination": "https://beans-inventory-api.onrender.com/api/:match*"
     }
   ]
 }

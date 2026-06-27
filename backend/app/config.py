@@ -1,6 +1,15 @@
 from pydantic_settings import BaseSettings
 
 
+def _normalize_database_url(url: str) -> str:
+    """Ensure PostgreSQL URLs use the asyncpg driver."""
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgresql://") and "+" not in url.split("://")[1].split("/")[0]:
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return url
+
+
 class Settings(BaseSettings):
     APP_NAME: str = "Beans Inventory Management System"
     APP_VERSION: str = "1.0.0"
@@ -22,6 +31,8 @@ class Settings(BaseSettings):
         "http://172.21.29.186:3000",
         "https://beans-app-iota.vercel.app",
         "https://beans-app-*.vercel.app",
+        "https://*.vercel.app",
+        "https://beans-inventory-api.onrender.com",
     ]
 
     class Config:
@@ -30,3 +41,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+settings.DATABASE_URL = _normalize_database_url(settings.DATABASE_URL)

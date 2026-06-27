@@ -1,14 +1,24 @@
 services:
+  # PostgreSQL database
+  - type: pg_database
+    name: beans-inventory-db
+    plan: free
+    databaseName: beans_inventory
+    user: postgres
+
+  # Backend web service
   - type: web
     name: beans-inventory-api
     runtime: python
     rootDir: backend
-    buildCommand: pip install -r requirements.txt && python scripts/seed.py
+    buildCommand: pip install -r requirements.txt && python scripts/seed.py || true
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        value: sqlite+aiosqlite:///./beans_inventory.db
+        fromDatabase:
+          name: beans-inventory-db
+          property: connectionString
       - key: PYTHON_VERSION
         value: 3.11.9
