@@ -11,8 +11,8 @@ def _normalize_database_url(url: str) -> str:
         url = url.replace("postgresql://", "postgresql+psycopg://", 1)
     if url.startswith("postgresql+asyncpg://"):
         url = url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
-    # Add sslmode if missing and connecting to cloud DB
-    if "render.com" in url and "sslmode" not in url:
+    # Add sslmode if missing and connecting to non-localhost PostgreSQL
+    if "psycopg" in url and "localhost" not in url and "127.0.0.1" not in url and "sslmode" not in url:
         separator = "&" if "?" in url else "?"
         url += f"{separator}sslmode=require"
     return url
