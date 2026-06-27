@@ -11,7 +11,7 @@ services:
     name: beans-inventory-api
     runtime: python
     rootDir: backend
-    buildCommand: pip install -r requirements.txt && python scripts/seed.py || true
+    buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: SECRET_KEY

@@ -2,11 +2,19 @@ from pydantic_settings import BaseSettings
 
 
 def _normalize_database_url(url: str) -> str:
-    """Ensure PostgreSQL URLs use the asyncpg driver."""
+    """Ensure PostgreSQL URLs use the psycopg driver and include sslmode for Render."""
+    # Normalize scheme to postgresql://
     if url.startswith("postgres://"):
-        return url.replace("postgres://", "postgresql+asyncpg://", 1)
+        url = url.replace("postgres://", "postgresql://", 1)
+    # Use psycopg (async) driver
     if url.startswith("postgresql://") and "+" not in url.split("://")[1].split("/")[0]:
-        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+    if url.startswith("postgresql+asyncpg://"):
+        url = url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
+    # Add sslmode if missing and connecting to cloud DB
+    if "render.com" in url and "sslmode" not in url:
+        separator = "&" if "?" in url else "?"
+        url += f"{separator}sslmode=require"
     return url
 
 

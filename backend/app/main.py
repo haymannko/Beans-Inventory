@@ -61,6 +61,18 @@ async def health_check():
 @app.on_event("startup")
 async def startup():
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
+    # Auto-create tables and seed data on first run
+    try:
+        from app.db.engine import engine
+        from app.models import Base
+        from app.services.seed import seed_if_empty
+
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        await seed_if_empty()
+        logger.info("Database tables and seed data ready")
+    except Exception as e:
+        logger.error(f"Database init error: {e}")
 
 
 @app.on_event("shutdown")
