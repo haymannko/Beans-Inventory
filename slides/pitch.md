@@ -4,11 +4,6 @@ paginate: true
 auto-advance: 20
 ---
 
-# Beans Inventory Management System
-## PechaKucha Presentation — 6 Slides × 20 Seconds
-
----
-
 ## Slide 1: The Problem We Solve
 
 **Title:** Why Beans Inventory Management?
@@ -96,23 +91,3 @@ auto-advance: 20
 
 > **Speaker Notes (20 sec):**
 > This system is built specifically for Myanmar bean warehouses. It supports Myanmar bean names throughout — in the UI, Excel, and PDF reports. Staff get secure logins with role-based access. It's fast, modern, and ready to deploy. Let's digitize your bean inventory today!
-
----
-
-## Presentation Summary
-
-| Slide | Topic | Duration |
-|-------|-------|----------|
-| 1 | The Problem We Solve | 20 sec |
-| 2 | Arrivals & Sales Tracking | 20 sec |
-| 3 | Storage Management | 20 sec |
-| 4 | Adjustments & Audit Trail | 20 sec |
-| 5 | Reports & Export | 20 sec |
-| 6 | Built for Myanmar Bean Businesses | 20 sec |
-
-**Total Presentation Time: 2 minutes**
-
----
-
-*Presented by: Beans Inventory Team*
-*Project Repository: https://github.com/haymannko/Beans-Inventory*
