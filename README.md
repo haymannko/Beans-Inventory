@@ -2,6 +2,8 @@
 
 A production-ready inventory management system for bean trading businesses. Track bean arrivals, sales, storage, stock movements, and current inventory balances.
 
+![Beans Inventory Login](screenshots/login.png)
+
 ## Features
 
 - **Authentication** - JWT-based login with Admin/Staff roles
