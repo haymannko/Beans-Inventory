@@ -36,7 +36,11 @@ async def seed_if_empty():
         admin = result.scalar_one_or_none()
 
         if admin is not None:
-            if not verify_password("admin123", admin.password_hash):
+            try:
+                hash_ok = verify_password("admin123", admin.password_hash)
+            except Exception:
+                hash_ok = False
+            if not hash_ok:
                 logger.warning("Resetting default passwords...")
                 all_users = await session.execute(select(User))
                 for user in all_users.scalars().all():
