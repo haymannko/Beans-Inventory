@@ -1,3 +1,9 @@
+---
+marp: true
+paginate: true
+auto-advance: 20
+---
+
 # Beans Inventory Management System
 ## PechaKucha Presentation — 6 Slides × 20 Seconds
 
