@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:match*",
-      "destination": "/api"
+      "destination": "https://beans-api-m6e1.onrender.com/api/:match*"
     }
   ]
 }

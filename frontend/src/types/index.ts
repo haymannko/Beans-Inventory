@@ -20,6 +20,8 @@ export interface Arrival {
   weight_kg: number
   supplier_name: string | null
   purchase_price: number
+  transport_fee: number | string
+  labor_fee: number | string
   arrival_date: string
   remarks: string | null
   created_by: string
@@ -138,6 +140,8 @@ export interface CreateArrivalRequest {
   weight_kg: number
   supplier_name?: string
   purchase_price: number
+  transport_fee: number | string
+  labor_fee: number | string
   arrival_date: string
   remarks?: string
 }
@@ -148,6 +152,8 @@ export interface UpdateArrivalRequest {
   weight_kg?: number
   supplier_name?: string
   purchase_price?: number
+  transport_fee?: number | string
+  labor_fee?: number | string
   arrival_date?: string
   remarks?: string
 }

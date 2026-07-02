@@ -76,12 +76,12 @@ export default function BeanTypes() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Bean Types</h1>
           <p className="text-gray-500 dark:text-gray-400">Manage your bean type catalog</p>
         </div>
-        <button onClick={() => setIsCreateModalOpen(true)} className="btn-primary flex items-center gap-2">
+        <button onClick={() => setIsCreateModalOpen(true)} className="btn-primary flex items-center justify-center gap-2">
           <FiPlus className="w-4 h-4" />
           Add Bean Type
         </button>
@@ -101,32 +101,29 @@ export default function BeanTypes() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Data */}
       <div className="card overflow-hidden p-0">
         {isLoading ? (
           <div className="flex items-center justify-center h-32">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
           </div>
+        ) : beanTypes?.length === 0 ? (
+          <div className="px-4 py-8 text-center text-gray-500">No bean types found</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="table-header">Name</th>
-                  <th className="table-header">Description</th>
-                  <th className="table-header">Created</th>
-                  <th className="table-header text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {beanTypes?.length === 0 ? (
+          <>
+            {/* Desktop table */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
-                      No bean types found
-                    </td>
+                    <th className="table-header">Name</th>
+                    <th className="table-header">Description</th>
+                    <th className="table-header">Created</th>
+                    <th className="table-header text-right">Actions</th>
                   </tr>
-                ) : (
-                  beanTypes?.map((bt) => (
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {beanTypes?.map((bt) => (
                     <tr key={bt.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="table-cell font-medium">{bt.name}</td>
                       <td className="table-cell text-gray-500">{bt.description || '-'}</td>
@@ -137,24 +134,55 @@ export default function BeanTypes() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => openEditModal(bt.id, bt.name, bt.description)}
-                            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600"
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600"
                           >
                             <FiEdit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(bt.id)}
-                            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-red-600"
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-red-600"
                           >
                             <FiTrash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="sm:hidden divide-y divide-gray-200 dark:divide-gray-700">
+              {beanTypes?.map((bt) => (
+                <div key={bt.id} className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-900 dark:text-white">{bt.name}</span>
+                    <span className="text-xs text-gray-500">
+                      {new Date(bt.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  {bt.description && (
+                    <p className="text-sm text-gray-500">{bt.description}</p>
+                  )}
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={() => openEditModal(bt.id, bt.name, bt.description)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    >
+                      <FiEdit2 className="w-4 h-4" /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(bt.id)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/40"
+                    >
+                      <FiTrash2 className="w-4 h-4" /> Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
@@ -184,11 +212,11 @@ export default function BeanTypes() {
               rows={3}
             />
           </div>
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setIsCreateModalOpen(false)} className="btn-secondary">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
+            <button type="button" onClick={() => setIsCreateModalOpen(false)} className="btn-secondary w-full sm:w-auto">
               Cancel
             </button>
-            <button type="submit" className="btn-primary">
+            <button type="submit" className="btn-primary w-full sm:w-auto">
               Create
             </button>
           </div>
@@ -221,11 +249,11 @@ export default function BeanTypes() {
               rows={3}
             />
           </div>
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setEditingId(null)} className="btn-secondary">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
+            <button type="button" onClick={() => setEditingId(null)} className="btn-secondary w-full sm:w-auto">
               Cancel
             </button>
-            <button type="submit" className="btn-primary">
+            <button type="submit" className="btn-primary w-full sm:w-auto">
               Update
             </button>
           </div>

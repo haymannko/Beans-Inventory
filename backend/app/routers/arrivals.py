@@ -53,6 +53,8 @@ async def list_arrivals(
             weight_kg=float(arrival.weight_kg),
             supplier_name=arrival.supplier_name,
             purchase_price=float(arrival.purchase_price),
+            transport_fee=float(arrival.transport_fee),
+            labor_fee=float(arrival.labor_fee),
             arrival_date=arrival.arrival_date,
             remarks=arrival.remarks,
             created_by=arrival.created_by,
@@ -82,6 +84,8 @@ async def create_arrival(
         weight_kg=request.weight_kg,
         supplier_name=request.supplier_name,
         purchase_price=request.purchase_price,
+        transport_fee=request.transport_fee,
+        labor_fee=request.labor_fee,
         arrival_date=request.arrival_date,
         remarks=request.remarks,
         created_by=str(user.id),
@@ -106,6 +110,8 @@ async def create_arrival(
         weight_kg=float(arrival.weight_kg),
         supplier_name=arrival.supplier_name,
         purchase_price=float(arrival.purchase_price),
+        transport_fee=float(arrival.transport_fee),
+        labor_fee=float(arrival.labor_fee),
         arrival_date=arrival.arrival_date,
         remarks=arrival.remarks,
         created_by=arrival.created_by,
@@ -140,6 +146,10 @@ async def update_arrival(
         arrival.supplier_name = request.supplier_name
     if request.purchase_price is not None:
         arrival.purchase_price = request.purchase_price
+    if request.transport_fee is not None:
+        arrival.transport_fee = request.transport_fee
+    if request.labor_fee is not None:
+        arrival.labor_fee = request.labor_fee
     if request.arrival_date is not None:
         arrival.arrival_date = request.arrival_date
     if request.remarks is not None:
@@ -161,6 +171,8 @@ async def update_arrival(
         weight_kg=float(arrival.weight_kg),
         supplier_name=arrival.supplier_name,
         purchase_price=float(arrival.purchase_price),
+        transport_fee=float(arrival.transport_fee),
+        labor_fee=float(arrival.labor_fee),
         arrival_date=arrival.arrival_date,
         remarks=arrival.remarks,
         created_by=arrival.created_by,

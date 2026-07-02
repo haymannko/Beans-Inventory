@@ -151,12 +151,12 @@ export default function Dashboard() {
         {/* Monthly Sales */}
         <div className="card">
           <h3 className="text-lg font-semibold mb-4">Monthly Sales (Bags)</h3>
-          <div className="h-64">
+          <div className="h-48 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dashboard.monthly_sales}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip formatter={(value: number) => `${value} bags`} />
                 <Bar dataKey="total" fill="#22c55e" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -167,12 +167,12 @@ export default function Dashboard() {
         {/* Monthly Arrivals */}
         <div className="card">
           <h3 className="text-lg font-semibold mb-4">Monthly Arrivals (Bags)</h3>
-          <div className="h-64">
+          <div className="h-48 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dashboard.monthly_arrivals}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip formatter={(value: number) => `${value} bags`} />
                 <Bar dataKey="total" fill="#3b82f6" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -183,35 +183,33 @@ export default function Dashboard() {
         {/* Recent Transactions */}
         <div className="card">
           <h3 className="text-lg font-semibold mb-4">Recent Transactions</h3>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {dashboard.recent_transactions.length === 0 ? (
               <p className="text-sm text-gray-500">No recent transactions</p>
             ) : (
               dashboard.recent_transactions.map((tx, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                  className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                 >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`p-2 rounded-lg ${
-                        tx.type === 'arrival'
-                          ? 'bg-green-100 text-green-600'
-                          : 'bg-blue-100 text-blue-600'
-                      }`}
-                    >
-                      {tx.type === 'arrival' ? (
-                        <FiTruck className="w-4 h-4" />
-                      ) : (
-                        <FiDollarSign className="w-4 h-4" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{tx.bean_type as string}</p>
-                      <p className="text-xs text-gray-500">{tx.type as string}</p>
-                    </div>
+                  <div
+                    className={`p-2 rounded-lg flex-shrink-0 ${
+                      tx.type === 'arrival'
+                        ? 'bg-green-100 text-green-600'
+                        : 'bg-blue-100 text-blue-600'
+                    }`}
+                  >
+                    {tx.type === 'arrival' ? (
+                      <FiTruck className="w-4 h-4" />
+                    ) : (
+                      <FiDollarSign className="w-4 h-4" />
+                    )}
                   </div>
-                  <div className="text-right">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{tx.bean_type as string}</p>
+                    <p className="text-xs text-gray-500">{tx.type as string}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
                     <p className="text-sm font-medium">{tx.quantity as number} bags</p>
                     <p className="text-xs text-gray-500">{tx.date as string}</p>
                   </div>

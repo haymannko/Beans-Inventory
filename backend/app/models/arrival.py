@@ -23,6 +23,8 @@ class Arrival(Base):
         CheckConstraint("quantity_bags >= 0", name="ck_arrivals_quantity_bags_non_negative"),
         CheckConstraint("weight_kg >= 0", name="ck_arrivals_weight_kg_non_negative"),
         CheckConstraint("purchase_price >= 0", name="ck_arrivals_purchase_price_non_negative"),
+        CheckConstraint("transport_fee >= 0", name="ck_arrivals_transport_fee_non_negative"),
+        CheckConstraint("labor_fee >= 0", name="ck_arrivals_labor_fee_non_negative"),
     )
 
     id: Mapped[str] = mapped_column(
@@ -35,6 +37,8 @@ class Arrival(Base):
     weight_kg: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     supplier_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     purchase_price: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    transport_fee: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    labor_fee: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     arrival_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     remarks: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by: Mapped[str] = mapped_column(

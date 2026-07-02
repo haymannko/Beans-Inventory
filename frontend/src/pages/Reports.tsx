@@ -142,7 +142,7 @@ export default function Reports() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mt-4">
+        <div className="flex flex-wrap items-center gap-2 mt-4">
           <button onClick={() => refetch()} className="btn-primary">
             Generate Report
           </button>
@@ -245,7 +245,7 @@ export default function Reports() {
           </div>
 
           {/* Period Info */}
-          <div className="md:col-span-3">
+          <div className="col-span-full">
             <div className="card bg-gray-50 dark:bg-gray-700/50">
               <p className="text-sm text-gray-500">
                 Report Period: {report.start_date} to {report.end_date}

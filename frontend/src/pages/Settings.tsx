@@ -45,21 +45,21 @@ export default function Settings() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Password</label>
               <div className="relative">
                 <input type={showCurrent ? 'text' : 'password'} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="input-field pr-10" required />
-                <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">{showCurrent ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}</button>
+                <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-gray-500" aria-label={showCurrent ? 'Hide password' : 'Show password'}>{showCurrent ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}</button>
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
               <div className="relative">
                 <input type={showNew ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="input-field pr-10" minLength={6} required />
-                <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">{showNew ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}</button>
+                <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-gray-500" aria-label={showNew ? 'Hide password' : 'Show password'}>{showNew ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}</button>
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm New Password</label>
               <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="input-field" minLength={6} required />
             </div>
-            <button type="submit" disabled={isLoading} className="btn-primary w-full flex items-center justify-center gap-2">
+            <button type="submit" disabled={isLoading} className="btn-primary w-full flex items-center justify-center gap-2 py-3">
               {isLoading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> : 'Change Password'}
             </button>
           </form>

@@ -191,46 +191,45 @@ export default function Adjustments() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Stock Adjustments</h1>
           <p className="text-gray-500 dark:text-gray-400">Correct stock levels with audit trail</p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="btn-primary flex items-center gap-2">
+        <button onClick={() => setIsModalOpen(true)} className="btn-primary flex items-center justify-center gap-2">
           <FiPlus className="w-4 h-4" />
           New Adjustment
         </button>
       </div>
 
-      {/* Table */}
+      {/* Data */}
       <div className="card overflow-hidden p-0">
         {isLoading ? (
           <div className="flex items-center justify-center h-32">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
           </div>
+        ) : adjustments?.length === 0 ? (
+          <div className="px-4 py-8 text-center text-gray-500">
+            <FiSliders className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+            No adjustments recorded
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="table-header">Date</th>
-                  <th className="table-header">Bean Type</th>
-                  <th className="table-header">Type</th>
-                  <th className="table-header">Weight (Viss)</th>
-                  <th className="table-header">Reason</th>
-                  <th className="table-header text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {adjustments?.length === 0 ? (
+          <>
+            {/* Desktop table */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                      <FiSliders className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                      No adjustments recorded
-                    </td>
+                    <th className="table-header">Date</th>
+                    <th className="table-header">Bean Type</th>
+                    <th className="table-header">Type</th>
+                    <th className="table-header">Weight (Viss)</th>
+                    <th className="table-header">Reason</th>
+                    <th className="table-header text-right">Actions</th>
                   </tr>
-                ) : (
-                  adjustments?.map((adj) => (
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {adjustments?.map((adj) => (
                     <tr key={adj.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="table-cell">{adj.adjustment_date}</td>
                       <td className="table-cell font-medium">{adj.bean_type_name}</td>
@@ -251,24 +250,65 @@ export default function Adjustments() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => openEditModal(adj)}
-                            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600"
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600"
                           >
                             <FiEdit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(adj.id)}
-                            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-red-600"
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-red-600"
                           >
                             <FiTrash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="sm:hidden divide-y divide-gray-200 dark:divide-gray-700">
+              {adjustments?.map((adj) => (
+                <div key={adj.id} className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-900 dark:text-white">{adj.bean_type_name}</span>
+                    <span
+                      className={`px-2 py-0.5 text-xs rounded-full ${
+                        adj.adjustment_type === 'increase'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {adj.adjustment_type}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    <span className="text-gray-500">Date:</span>
+                    <span className="text-gray-900 dark:text-gray-100">{adj.adjustment_date}</span>
+                    <span className="text-gray-500">Weight:</span>
+                    <span className="text-gray-900 dark:text-gray-100">{adj.quantity.toFixed(2)} Viss</span>
+                  </div>
+                  <p className="text-xs text-gray-500">Reason: {adj.reason}</p>
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={() => openEditModal(adj)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    >
+                      <FiEdit2 className="w-4 h-4" /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(adj.id)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/40"
+                    >
+                      <FiTrash2 className="w-4 h-4" /> Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
@@ -276,11 +316,11 @@ export default function Adjustments() {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="New Stock Adjustment" maxWidth="lg">
         <form onSubmit={handleCreate} className="space-y-4">
           {formFields}
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
+            <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary w-full sm:w-auto">
               Cancel
             </button>
-            <button type="submit" className="btn-primary">
+            <button type="submit" className="btn-primary w-full sm:w-auto">
               Record Adjustment
             </button>
           </div>
@@ -291,11 +331,11 @@ export default function Adjustments() {
       <Modal isOpen={!!editingId} onClose={() => setEditingId(null)} title="Edit Stock Adjustment" maxWidth="lg">
         <form onSubmit={handleUpdate} className="space-y-4">
           {formFields}
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setEditingId(null)} className="btn-secondary">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
+            <button type="button" onClick={() => setEditingId(null)} className="btn-secondary w-full sm:w-auto">
               Cancel
             </button>
-            <button type="submit" className="btn-primary">
+            <button type="submit" className="btn-primary w-full sm:w-auto">
               Update
             </button>
           </div>

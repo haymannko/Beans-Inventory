@@ -10,6 +10,8 @@ class ArrivalCreate(BaseModel):
     weight_kg: float = Field(..., ge=0)
     supplier_name: str | None = None
     purchase_price: float = Field(default=0, ge=0)
+    transport_fee: float = Field(default=0, ge=0)
+    labor_fee: float = Field(default=0, ge=0)
     arrival_date: date
     remarks: str | None = None
 
@@ -20,6 +22,8 @@ class ArrivalUpdate(BaseModel):
     weight_kg: float | None = Field(None, ge=0)
     supplier_name: str | None = None
     purchase_price: float | None = Field(None, ge=0)
+    transport_fee: float | None = Field(None, ge=0)
+    labor_fee: float | None = Field(None, ge=0)
     arrival_date: date | None = None
     remarks: str | None = None
 
@@ -32,6 +36,8 @@ class ArrivalResponse(BaseModel):
     weight_kg: float
     supplier_name: str | None
     purchase_price: float
+    transport_fee: float
+    labor_fee: float
     arrival_date: date
     remarks: str | None
     created_by: uuid.UUID

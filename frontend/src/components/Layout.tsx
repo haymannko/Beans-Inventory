@@ -35,11 +35,11 @@ export default function Layout() {
 
             <div className="flex-1" />
 
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm">
-                <FiUser className="w-4 h-4 text-gray-500" />
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-sm">
+                <FiUser className="w-4 h-4 text-gray-500 hidden sm:block" />
                 <span className="font-medium">{user?.username}</span>
-                <span className="px-2 py-0.5 text-xs rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300">
+                <span className="hidden sm:inline px-2 py-0.5 text-xs rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300">
                   {user?.role}
                 </span>
               </div>
