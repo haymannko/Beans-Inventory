@@ -3,5 +3,15 @@
     "api/**/*.py": {
       "includeFiles": "backend/**"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:match*",
+      "destination": "https://beans-api-m6e1.onrender.com/api/:match*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
