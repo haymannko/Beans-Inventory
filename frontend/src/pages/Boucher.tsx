@@ -46,8 +46,6 @@ export default function Boucher() {
     )
   }
 
-  const totalBags = rows.reduce((s, x) => s + x.bags, 0)
-  const totalWeight = rows.reduce((s, x) => s + x.weight, 0)
   const totalAmount = rows.reduce((s, x) => s + x.amount, 0)
 
   return (
