@@ -76,11 +76,11 @@ export default function Arrivals() {
       await createMutation.mutateAsync({
         bean_type_id: formData.bean_type_id,
         quantity_bags: parseInt(formData.quantity_bags),
-        weight_kg: parseFloat(formData.weight_kg),
+        weight_kg: formData.weight_kg === '-' ? 0 : parseFloat(formData.weight_kg) || 0,
         supplier_name: formData.supplier_name || undefined,
-        purchase_price: parseFloat(formData.purchase_price) || 0,
-        transport_fee: parseFloat(formData.transport_fee) || 0,
-        labor_fee: parseFloat(formData.labor_fee) || 0,
+        purchase_price: formData.purchase_price === '-' || !formData.purchase_price ? 0 : parseFloat(formData.purchase_price) || 0,
+        transport_fee: formData.transport_fee === '-' || !formData.transport_fee ? 0 : parseFloat(formData.transport_fee) || 0,
+        labor_fee: formData.labor_fee === '-' || !formData.labor_fee ? 0 : parseFloat(formData.labor_fee) || 0,
         arrival_date: formData.arrival_date,
         remarks: formData.remarks || undefined,
       })
@@ -105,11 +105,11 @@ export default function Arrivals() {
         data: {
           bean_type_id: formData.bean_type_id,
           quantity_bags: parseInt(formData.quantity_bags),
-          weight_kg: parseFloat(formData.weight_kg),
+          weight_kg: formData.weight_kg === '-' ? 0 : parseFloat(formData.weight_kg) || 0,
           supplier_name: formData.supplier_name || undefined,
-          purchase_price: parseFloat(formData.purchase_price) || 0,
-          transport_fee: parseFloat(formData.transport_fee) || 0,
-          labor_fee: parseFloat(formData.labor_fee) || 0,
+          purchase_price: formData.purchase_price === '-' || !formData.purchase_price ? 0 : parseFloat(formData.purchase_price) || 0,
+          transport_fee: formData.transport_fee === '-' || !formData.transport_fee ? 0 : parseFloat(formData.transport_fee) || 0,
+          labor_fee: formData.labor_fee === '-' || !formData.labor_fee ? 0 : parseFloat(formData.labor_fee) || 0,
           arrival_date: formData.arrival_date,
           remarks: formData.remarks || undefined,
         },
@@ -180,12 +180,11 @@ export default function Arrivals() {
             Weight (Viss) *
           </label>
           <input
-            type="number"
+            type="text"
             value={formData.weight_kg}
             onChange={(e) => setFormData({ ...formData, weight_kg: e.target.value })}
             className="input-field"
-            min="0"
-            step="0.01"
+            placeholder="e.g. 100 or -"
             required
           />
         </div>
@@ -207,12 +206,11 @@ export default function Arrivals() {
             Purchase Price
           </label>
           <input
-            type="number"
+            type="text"
             value={formData.purchase_price}
             onChange={(e) => setFormData({ ...formData, purchase_price: e.target.value })}
             className="input-field"
-            min="0"
-            step="0.01"
+            placeholder="e.g. 50000 or -"
           />
         </div>
 
@@ -221,12 +219,11 @@ export default function Arrivals() {
             ကားခ (Transport Fee)
           </label>
           <input
-            type="number"
+            type="text"
             value={formData.transport_fee}
             onChange={(e) => setFormData({ ...formData, transport_fee: e.target.value })}
             className="input-field"
-            min="0"
-            step="0.01"
+            placeholder="e.g. 5000 or -"
           />
         </div>
 
@@ -235,12 +232,11 @@ export default function Arrivals() {
             အလုပ်သမားခ (Labor Fee)
           </label>
           <input
-            type="number"
+            type="text"
             value={formData.labor_fee}
             onChange={(e) => setFormData({ ...formData, labor_fee: e.target.value })}
             className="input-field"
-            min="0"
-            step="0.01"
+            placeholder="e.g. 3000 or -"
           />
         </div>
       </div>
