@@ -34,7 +34,22 @@ auto-advance: 20
 
 ---
 
-## Slide 3: Storage Management
+## Slide 3: Voucher (ဘောင်ချာ) — Print-Ready Transaction Forms
+
+**Title:** Traditional Myanmar Voucher, Digitized
+
+- **Editable Voucher Form** — customer name, date, voucher number, 12-row item table
+- **Auto-calculation** — weight × rate = amount, with running totals
+- **Myanmar Layout** — red ornate border, L-bracket corners, traditional formatting
+- **Print-Optimized** — one-click print to A4, hides UI chrome, exact color reproduction
+- **Footer Fields** — signature lines for ကားခ, လက်ခံရရှိ, ချိန်ခ, ထောက်ခံ, and more
+
+> **Speaker Notes (20 sec):**
+> Bean traders still need physical vouchers for every transaction. Our Voucher page recreates the traditional Myanmar ဘောင်ချာ format — ornate red borders, editable table rows, auto-calculated totals — and prints perfectly on A4. Staff fill in the form on screen and hit print. No more handwriting errors.
+
+---
+
+## Slide 4: Storage Management
 
 **Title:** Know Exactly Where Your Beans Are
 
@@ -49,7 +64,7 @@ auto-advance: 20
 
 ---
 
-## Slide 4: Adjustments & Audit Trail
+## Slide 5: Adjustments & Audit Trail
 
 **Title:** Fix Mistakes with Full Accountability
 
@@ -64,7 +79,7 @@ auto-advance: 20
 
 ---
 
-## Slide 5: Reports & Export
+## Slide 6: Reports & Export
 
 **Title:** One-Click Reports for Better Decisions
 
@@ -79,7 +94,7 @@ auto-advance: 20
 
 ---
 
-## Slide 6: Built for Myanmar Bean Businesses
+## Slide 7: Built for Myanmar Bean Businesses
 
 **Title:** Ready to Use — Simple, Fast, Accurate
 
