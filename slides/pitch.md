@@ -19,18 +19,18 @@ auto-advance: 20
 
 ---
 
-## Slide 2: Arrivals & Sales Tracking
+## Slide 2: Arrivals, Sales & Storage
 
-**Title:** Record Every Bag In and Out
+**Title:** Track Every Bag In, Out, and Where It Lives
 
-- **Arrivals:** Log incoming bean shipments with date, bean type, bags, and purchase price
+- **Arrivals:** Log incoming shipments with date, bean type, bags, and purchase price
 - **Sales:** Record outgoing orders with customer info and sale price
-- Each transaction automatically updates stock levels in real-time
-- Supports multiple bean types: ပဲတီစိမ်း, မြေထောက်ပဲ, ကုလားပဲ, and more
-- Dashboard shows daily/weekly/monthly transaction summaries
+- **Storage:** Organize beans by warehouse location, prevent over-selling
+- Each transaction auto-updates stock levels in real-time
+- Dashboard shows daily/weekly/monthly summaries with low-stock alerts
 
 > **Speaker Notes (20 sec):**
-> Every bean bag entering or leaving the warehouse gets recorded. The system tracks bean type, quantity, price, and date. Stock updates automatically — no manual calculations. Owners can see at a glance how many bags arrived today and how many were sold.
+> Every bean bag entering or leaving the warehouse gets recorded. The system tracks bean type, quantity, price, and date — and knows exactly where each bag is stored. Stock updates automatically. Owners see at a glance what's in stock, what's running low, and where it all is.
 
 ---
 
@@ -49,22 +49,7 @@ auto-advance: 20
 
 ---
 
-## Slide 4: Storage Management
-
-**Title:** Know Exactly Where Your Beans Are
-
-- Organize warehouses into multiple storage locations
-- Track bean quantities per storage unit
-- View current stock levels by bean type across all locations
-- Prevent over-selling by checking real-time availability
-- Visual dashboard highlights low-stock alerts
-
-> **Speaker Notes (20 sec):**
-> Storage management lets you organize beans by location. You can see exactly how many bags of each type are stored where. This prevents selling beans you don't have and helps optimize warehouse space. The dashboard gives a bird's-eye view of all storage units.
-
----
-
-## Slide 5: Adjustments & Audit Trail
+## Slide 4: Adjustments & Audit Trail
 
 **Title:** Fix Mistakes with Full Accountability
 
@@ -79,7 +64,7 @@ auto-advance: 20
 
 ---
 
-## Slide 6: Reports & Export
+## Slide 5: Reports & Export
 
 **Title:** One-Click Reports for Better Decisions
 
@@ -94,7 +79,7 @@ auto-advance: 20
 
 ---
 
-## Slide 7: Built for Myanmar Bean Businesses
+## Slide 6: Built for Myanmar Bean Businesses
 
 **Title:** Ready to Use — Simple, Fast, Accurate
 
