@@ -1,6 +1,6 @@
 # Beans Inventory Management System
 
-A production-ready inventory management system for bean trading businesses. Track bean arrivals, sales, storage, stock movements, and current inventory balances.
+Myanmar bean trading inventory — track arrivals, sales, storage, and print vouchers in one fast, accurate system.
 
 ![Beans Inventory Login](screenshots/login.png)
 
