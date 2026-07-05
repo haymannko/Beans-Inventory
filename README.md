@@ -4,6 +4,10 @@ A production-ready inventory management system for bean trading businesses. Trac
 
 ![Beans Inventory Login](screenshots/login.png)
 
+![Arrivals](arrivals.png)
+
+![Voucher](Voucher.png)
+
 ## Features
 
 - **Authentication** - JWT-based login with Admin/Staff roles

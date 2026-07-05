@@ -16,7 +16,7 @@ export default function VoucherHeader({
       <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
         ဘောင်ချာ
       </h1>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Bouncher / Voucher</p>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Voucher</p>
 
       <div className="flex flex-col sm:flex-row justify-between gap-3 text-sm">
         <div className="flex items-center gap-2">

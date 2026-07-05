@@ -48,8 +48,16 @@ export default function Boucher() {
 
   const totalAmount = rows.reduce((s, x) => s + x.amount, 0)
 
+  const handlePrint = () => {
+    document.body.classList.add('printing')
+    window.print()
+    setTimeout(() => {
+      document.body.classList.remove('printing')
+    }, 1000)
+  }
+
   return (
-    <div style={{ background: '#f0f0f0', minHeight: '100vh', padding: '16px' }}>
+    <div id="voucher-page" style={{ background: '#f0f0f0', minHeight: '100vh', padding: '16px' }}>
       {/* ---- Toolbar (hidden on print) ---- */}
       <div
         className="no-print"
@@ -65,7 +73,7 @@ export default function Boucher() {
           ဘောင်ချာ
         </h1>
         <button
-          onClick={() => window.print()}
+          onClick={handlePrint}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -186,7 +194,7 @@ export default function Boucher() {
               {/* ===== PHONE NUMBERS ===== */}
               <div style={{ textAlign: 'center', marginBottom: 8 }}>
                 <p style={{ fontSize: 10, color: '#555', margin: 0 }}>
-                  ☎ 09-2014134, 09-43146569, 09-974420391
+                  ☎ 09-********, 09-********, 09-********
                 </p>
               </div>
 
@@ -221,7 +229,7 @@ export default function Boucher() {
                     <th style={{ ...thStyle, width: 48 }}>အိတ်</th>
                     <th style={{ ...thStyle, width: 64 }}>ပိဿာ</th>
                     <th style={{ ...thStyle, width: 100 }}>ဈေးနှုန်း</th>
-                    <th style={{ ...thStyle, width: 302 }}>သင့်ငွေ(ကျပ်)</th>
+                    <th style={{ ...thStyle, width: 280 }}>သင့်ငွေ(ကျပ်)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -399,7 +407,7 @@ const voucherOuterStyle: React.CSSProperties = {
 const outerBorderStyle: React.CSSProperties = {
   position: 'relative',
   border: `3px solid ${BORDER_COLOR}`,
-  margin: 6,
+  margin: 0,
 }
 
 const innerBorderStyle: React.CSSProperties = {
@@ -489,7 +497,7 @@ const printCSS = `
   @media print {
     @page {
       size: A4 portrait;
-      margin: 0.4in;
+      margin: 0;
     }
     html, body {
       background: white !important;
@@ -501,27 +509,48 @@ const printCSS = `
     .no-print {
       display: none !important;
     }
+    #voucher-page {
+      padding: 0 !important;
+      background: white !important;
+      min-height: auto !important;
+    }
     #voucher {
       box-shadow: none !important;
       max-width: 100% !important;
+      width: 100% !important;
       margin: 0 !important;
-      background: transparent !important;
+      background: #fdf0ec !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    #voucher > div {
+      border: 3px solid ${RED} !important;
+      margin: 6px !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    #voucher > div > div {
+      border: 1px solid ${RED} !important;
+      margin: 4px !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    #voucher svg {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
     #voucher input {
       border-color: transparent !important;
       background: transparent !important;
       color: #000 !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    #voucher,
-    #voucher * {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
     }
     table, th, td {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
+    }
+    th {
+      background: ${RED} !important;
+      color: white !important;
     }
   }
   #voucher input:focus {

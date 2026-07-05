@@ -23,7 +23,7 @@ const navigation = [
   { name: 'Reports', href: '/reports', icon: FiFileText },
   { name: 'Users', href: '/users', icon: FiUsers },
   { name: 'Settings', href: '/settings', icon: FiSettings },
-  { name: 'Bouncher', href: '/bouncher', icon: FiShield },
+  { name: 'Voucher', href: '/bouncher', icon: FiShield },
 ]
 
 interface SidebarProps {
