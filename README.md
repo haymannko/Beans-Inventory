@@ -1,6 +1,6 @@
 # Beans Inventory Management System
 
-Myanmar bean trading inventory — track arrivals, sales, storage, and print vouchers in one fast, accurate system.
+Myanmar bean warehouses run on paper — we replace it with a fast, accurate digital system.
 
 ![Beans Inventory Login](screenshots/login.png)
 
