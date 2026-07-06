@@ -2,9 +2,6 @@
 
 **One-line summary:** Myanmar bean warehouses run on paper — we replace it with a fast, accurate digital system.
 
-![Dashboard](screenshots-new/dashboard.png)
-![Arrivals](screenshots-new/arrivals.png)
-![Voucher](screenshots-new/voucher.png)
 
 ## Features
 
