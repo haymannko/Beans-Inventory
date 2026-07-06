@@ -8,6 +8,8 @@ auto-advance: 20
 
 **Title:** Why Beans Inventory Management?
 
+> **One-liner:** Myanmar bean warehouses run on paper — we replace it with a fast, accurate digital system.
+
 - Bean warehouse owners track inventory using paper notebooks or Excel spreadsheets
 - Manual counting leads to errors — wrong stock levels, missed arrivals, lost sales
 - No real-time visibility into what's in storage

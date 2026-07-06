@@ -19,6 +19,10 @@
     "web-search": {
       "command": "npx",
       "args": ["-y", "mcp-duckduckgo"]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest", "--headless", "--no-usage-statistics"]
     }
   }
 }
