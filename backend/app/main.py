@@ -80,6 +80,12 @@ async def startup():
 
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+            # Migrate: recreate weight_master if schema changed
+            try:
+                from sqlalchemy import text
+                await conn.execute(text("DROP TABLE IF EXISTS weight_master"))
+            except Exception:
+                pass
             # Migrate: add new columns if they don't exist
             for col in ("transport_fee", "labor_fee"):
                 try:
