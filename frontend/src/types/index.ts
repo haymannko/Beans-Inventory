@@ -78,6 +78,25 @@ export interface AuditLog {
   created_at: string
 }
 
+export interface WeightMaster {
+  id: string
+  bean_type_id: string
+  bean_type_name: string | null
+  weight: number
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateWeightMasterRequest {
+  bean_type_id: string
+  weight: number
+}
+
+export interface UpdateWeightMasterRequest {
+  bean_type_id?: string
+  weight?: number
+}
+
 export interface StockByBeanType {
   bean_type_id: string
   bean_type_name: string

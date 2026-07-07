@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import BeanTypes from './pages/BeanTypes'
+import WeightMaster from './pages/WeightMaster'
 import Arrivals from './pages/Arrivals'
 import Sales from './pages/Sales'
 import Storages from './pages/Storage'
@@ -20,6 +21,7 @@ export default function App() {
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
         <Route path="bean-types" element={<BeanTypes />} />
+        <Route path="weight-master" element={<WeightMaster />} />
         <Route path="arrivals" element={<Arrivals />} />
         <Route path="sales" element={<Sales />} />
         <Route path="storage" element={<Storages />} />

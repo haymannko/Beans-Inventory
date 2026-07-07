@@ -16,6 +16,7 @@ from app.routers import (
     sales,
     storages,
     users,
+    weight_master,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -51,6 +52,7 @@ app.include_router(adjustments.router)
 app.include_router(dashboard.router)
 app.include_router(reports.router)
 app.include_router(audit_logs.router)
+app.include_router(weight_master.router)
 
 
 @app.get("/health")

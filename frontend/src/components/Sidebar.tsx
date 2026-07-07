@@ -10,12 +10,14 @@ import {
   FiUsers,
   FiSettings,
   FiShield,
+  FiList,
   FiX,
 } from 'react-icons/fi'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: FiGrid },
   { name: 'Bean Types', href: '/bean-types', icon: FiPackage },
+  { name: 'အသားအလေးချိန်စာရင်း', href: '/weight-master', icon: FiList },
   { name: 'Arrivals', href: '/arrivals', icon: FiTruck },
   { name: 'Sales', href: '/sales', icon: FiDollarSign },
   { name: 'Storage', href: '/storage', icon: FiArchive },

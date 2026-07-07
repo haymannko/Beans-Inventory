@@ -6,6 +6,7 @@ from app.models.sale import Sale
 from app.models.storage import Storage
 from app.models.stock_adjustment import StockAdjustment
 from app.models.audit_log import AuditLog
+from app.models.weight_master import WeightMaster
 
 __all__ = [
     "Base",
@@ -16,4 +17,5 @@ __all__ = [
     "Storage",
     "StockAdjustment",
     "AuditLog",
+    "WeightMaster",
 ]

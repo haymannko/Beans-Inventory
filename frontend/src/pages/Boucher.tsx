@@ -1,26 +1,31 @@
-
 import { useState } from 'react'
 import { FiPrinter } from 'react-icons/fi'
+import { useBeanTypes } from '../hooks/useBeanTypes'
+import { useWeightMasterList } from '../hooks/useWeightMaster'
 
 const RED = '#c0392b'
 const BORDER_COLOR = RED
 
 interface Row {
   no: string
+  beanTypeId: string
   beanType: string
   bags: number
   weight: number
   rate: number
   amount: number
+  weightMaster: number
 }
 
 const createRow = (): Row => ({
   no: '',
+  beanTypeId: '',
   beanType: '',
   bags: 0,
   weight: 0,
   rate: 0,
   amount: 0,
+  weightMaster: 0,
 })
 
 const TOTAL_ROWS = 12
@@ -31,16 +36,41 @@ export default function Boucher() {
   const [location, setLocation] = useState('')
   const [rows, setRows] = useState<Row[]>(Array.from({ length: TOTAL_ROWS }, createRow))
 
+  const { data: beanTypes } = useBeanTypes()
+  const { data: weightMasterList } = useWeightMasterList()
+
+  // Build a lookup map: bean_type_id -> weight
+  const weightMap = new Map<string, number>()
+  if (weightMasterList) {
+    for (const wm of weightMasterList) {
+      weightMap.set(wm.bean_type_id, wm.weight)
+    }
+  }
+
   const updateRow = (idx: number, field: keyof Row, value: number | string) => {
     setRows((prev) =>
       prev.map((r, i) => {
         if (i !== idx) return r
         const updated = { ...r, [field]: value }
-        if (field === 'weight' || field === 'rate') {
+
+        // When bean type changes, auto-load weight from master
+        if (field === 'beanTypeId') {
+          const bt = beanTypes?.find((b) => b.id === value)
+          updated.beanType = bt?.name || ''
+          const masterWeight = weightMap.get(value as string) || 0
+          updated.weightMaster = masterWeight
+          // Recalculate amount
+          updated.amount = updated.bags * updated.weight * updated.rate / (masterWeight || 1)
+        }
+
+        // Recalculate amount when bags, weight, or rate changes
+        if (field === 'bags' || field === 'weight' || field === 'rate') {
+          const b = field === 'bags' ? Number(value) : r.bags
           const w = field === 'weight' ? Number(value) : r.weight
           const p = field === 'rate' ? Number(value) : r.rate
-          updated.amount = w * p
+          updated.amount = b * w * p / (updated.weightMaster || 1)
         }
+
         return updated
       })
     )
@@ -161,7 +191,7 @@ export default function Boucher() {
               {/* ===== RED HEADER BANNER ===== */}
               <div style={headerBannerStyle}>
                 <div
-                  style={{               
+                  style={{
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
@@ -177,9 +207,9 @@ export default function Boucher() {
                         margin: 0,
                       }}
                     >
-                      ပဲမျိုးစုံ ပြောင်း ဂျုံ ဆီထွက်သီနှံရောင်းဝယ်ရေး                   
+                      ပဲမျိုးစုံ ပြောင်း ဂျုံ ဆီထွက်သီနှံရောင်းဝယ်ရေး
                     </p>
-                  </div>  
+                  </div>
                 </div>
               </div>
 
@@ -226,10 +256,11 @@ export default function Boucher() {
                   <tr>
                     <th style={{ ...thStyle, width: 23 }}>စဉ်</th>
                     <th style={{ ...thStyle, width: 200 }}>ကုန်အမျိုးအမည်</th>
+                    <th style={{ ...thStyle, width: 80 }}>ထည့်ဝင်သည့်အလေးချိန်</th>
                     <th style={{ ...thStyle, width: 48 }}>အိတ်</th>
                     <th style={{ ...thStyle, width: 64 }}>ပိဿာ</th>
                     <th style={{ ...thStyle, width: 100 }}>ဈေးနှုန်း</th>
-                    <th style={{ ...thStyle, width: 280 }}>သင့်ငွေ(ကျပ်)</th>
+                    <th style={{ ...thStyle, width: 200 }}>သင့်ငွေ(ကျပ်)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -246,18 +277,23 @@ export default function Boucher() {
                           />
                         </td>
                         <td style={tdStyle}>
-                          <input
-                            type="text"
-                            value={row?.beanType ?? ''}
-                            onChange={(e) => updateRow(i, 'beanType', e.target.value)}
-                            style={cellInputStyle}
-                          />
+                          <select
+                            value={row?.beanTypeId ?? ''}
+                            onChange={(e) => updateRow(i, 'beanTypeId', e.target.value)}
+                            style={cellSelectStyle}
+                          >
+                            <option value="">ရွေးပါ</option>
+                            {beanTypes?.map((bt) => (
+                              <option key={bt.id} value={bt.id}>{bt.name}</option>
+                            ))}
+                          </select>
                         </td>
                         <td style={{ ...tdStyle, textAlign: 'center' }}>
                           <input
                             type="number"
-                            value={row?.bags || ''}
-                            onChange={(e) => updateRow(i, 'bags', Number(e.target.value))}
+                            step="0.01"
+                            value={row?.weight || ''}
+                            onChange={(e) => updateRow(i, 'weight', Number(e.target.value))}
                             style={{ ...cellInputStyle, textAlign: 'center' }}
                             min="0"
                           />
@@ -265,11 +301,14 @@ export default function Boucher() {
                         <td style={tdStyle}>
                           <input
                             type="number"
-                            value={row?.weight || ''}
-                            onChange={(e) => updateRow(i, 'weight', Number(e.target.value))}
+                            value={row?.bags || ''}
+                            onChange={(e) => updateRow(i, 'bags', Number(e.target.value))}
                             style={{ ...cellInputStyle, textAlign: 'right' }}
                             min="0"
                           />
+                        </td>
+                        <td style={{ ...tdStyle, textAlign: 'center', fontSize: 11, color: '#888' }}>
+                          {row?.weightMaster || ''}
                         </td>
                         <td style={tdStyle}>
                           <input
@@ -281,7 +320,7 @@ export default function Boucher() {
                           />
                         </td>
                         <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 500, color: '#1a1a1a' }}>
-                          {row && row.amount > 0 ? row.amount.toLocaleString() : ''}
+                          {row && row.amount > 0 ? row.amount.toLocaleString(undefined, { maximumFractionDigits: 2 }) : ''}
                         </td>
                       </tr>
                     )
@@ -305,7 +344,7 @@ export default function Boucher() {
                         borderTop: `2px solid ${BORDER_COLOR}`,
                       }}
                     >
-                      {totalAmount > 0 ? totalAmount.toLocaleString() : ''}
+                      {totalAmount > 0 ? totalAmount.toLocaleString(undefined, { maximumFractionDigits: 2 }) : ''}
                     </td>
                     <td style={{ ...tdStyle, borderBottom: 'none', borderTop: `2px solid ${BORDER_COLOR}` }} />
                   </tr>
@@ -485,6 +524,19 @@ const cellInputStyle: React.CSSProperties = {
   boxSizing: 'border-box',
 }
 
+const cellSelectStyle: React.CSSProperties = {
+  width: '100%',
+  background: 'transparent',
+  outline: 'none',
+  border: 'none',
+  fontSize: 12,
+  color: '#374151',
+  padding: 0,
+  fontFamily: 'inherit',
+  boxSizing: 'border-box',
+  cursor: 'pointer',
+}
+
 const footerRowStyle: React.CSSProperties = {
   display: 'flex',
   gap: 24,
@@ -539,7 +591,7 @@ const printCSS = `
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
     }
-    #voucher input {
+    #voucher input, #voucher select {
       border-color: transparent !important;
       background: transparent !important;
       color: #000 !important;
@@ -553,7 +605,7 @@ const printCSS = `
       color: white !important;
     }
   }
-  #voucher input:focus {
+  #voucher input:focus, #voucher select:focus {
     outline: none;
     border-bottom-color: ${RED} !important;
   }
