@@ -58,7 +58,7 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 @pytest.fixture
 async def admin_user(db_session: AsyncSession) -> User:
     user = User(
-        id=uuid.uuid4(),
+        id=str(uuid.uuid4()),
         username="testadmin",
         password_hash=hash_password("testpass123"),
         role=UserRole.ADMIN,
@@ -71,7 +71,7 @@ async def admin_user(db_session: AsyncSession) -> User:
 @pytest.fixture
 async def staff_user(db_session: AsyncSession) -> User:
     user = User(
-        id=uuid.uuid4(),
+        id=str(uuid.uuid4()),
         username="teststaff",
         password_hash=hash_password("testpass123"),
         role=UserRole.STAFF,

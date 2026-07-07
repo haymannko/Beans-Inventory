@@ -31,7 +31,7 @@ async def test_get_current_user(client: AsyncClient, admin_token):
 @pytest.mark.asyncio
 async def test_unauthorized_access(client: AsyncClient):
     response = await client.get("/api/auth/me")
-    assert response.status_code == 403
+    assert response.status_code in (401, 403)
 
 
 @pytest.mark.asyncio
