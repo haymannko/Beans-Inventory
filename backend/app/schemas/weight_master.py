@@ -5,19 +5,18 @@ from pydantic import BaseModel, Field
 
 
 class WeightMasterCreate(BaseModel):
-    bean_type_id: str = Field(..., min_length=1)
+    bean_name: str = Field(..., min_length=1, max_length=200)
     weight: float = Field(..., gt=0)
 
 
 class WeightMasterUpdate(BaseModel):
-    bean_type_id: str | None = Field(None, min_length=1)
+    bean_name: str | None = Field(None, min_length=1, max_length=200)
     weight: float | None = Field(None, gt=0)
 
 
 class WeightMasterResponse(BaseModel):
     id: uuid.UUID
-    bean_type_id: str
-    bean_type_name: str | None = None
+    bean_name: str
     weight: float
     created_at: datetime
     updated_at: datetime

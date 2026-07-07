@@ -13,17 +13,6 @@ export function useWeightMasterList(search?: string) {
   })
 }
 
-export function useWeightMaster(id: string) {
-  return useQuery({
-    queryKey: ['weightMaster', id],
-    queryFn: async () => {
-      const response = await apiClient.get<WeightMaster>(`/weight-master/${id}`)
-      return response.data
-    },
-    enabled: !!id,
-  })
-}
-
 export function useCreateWeightMaster() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -31,9 +20,7 @@ export function useCreateWeightMaster() {
       const response = await apiClient.post<WeightMaster>('/weight-master', data)
       return response.data
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['weightMaster'] })
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['weightMaster'] }),
   })
 }
 
@@ -44,9 +31,7 @@ export function useUpdateWeightMaster() {
       const response = await apiClient.put<WeightMaster>(`/weight-master/${id}`, data)
       return response.data
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['weightMaster'] })
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['weightMaster'] }),
   })
 }
 
@@ -56,8 +41,6 @@ export function useDeleteWeightMaster() {
     mutationFn: async (id: string) => {
       await apiClient.delete(`/weight-master/${id}`)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['weightMaster'] })
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['weightMaster'] }),
   })
 }

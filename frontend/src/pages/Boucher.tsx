@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { FiPrinter } from 'react-icons/fi'
-import { useBeanTypes } from '../hooks/useBeanTypes'
 import { useWeightMasterList } from '../hooks/useWeightMaster'
 
 const RED = '#c0392b'
@@ -8,7 +7,6 @@ const BORDER_COLOR = RED
 
 interface Row {
   no: string
-  beanTypeId: string
   beanType: string
   bags: number
   weight: number
@@ -19,7 +17,6 @@ interface Row {
 
 const createRow = (): Row => ({
   no: '',
-  beanTypeId: '',
   beanType: '',
   bags: 0,
   weight: 0,
@@ -36,14 +33,13 @@ export default function Boucher() {
   const [location, setLocation] = useState('')
   const [rows, setRows] = useState<Row[]>(Array.from({ length: TOTAL_ROWS }, createRow))
 
-  const { data: beanTypes } = useBeanTypes()
   const { data: weightMasterList } = useWeightMasterList()
 
-  // Build a lookup map: bean_type_id -> weight
+  // Build a lookup map: bean_name -> weight
   const weightMap = new Map<string, number>()
   if (weightMasterList) {
     for (const wm of weightMasterList) {
-      weightMap.set(wm.bean_type_id, wm.weight)
+      weightMap.set(wm.bean_name, wm.weight)
     }
   }
 
@@ -54,12 +50,9 @@ export default function Boucher() {
         const updated = { ...r, [field]: value }
 
         // When bean type changes, auto-load weight from master
-        if (field === 'beanTypeId') {
-          const bt = beanTypes?.find((b) => b.id === value)
-          updated.beanType = bt?.name || ''
+        if (field === 'beanType') {
           const masterWeight = weightMap.get(value as string) || 0
           updated.weightMaster = masterWeight
-          // Recalculate amount
           updated.amount = updated.bags * updated.weight * updated.rate / (masterWeight || 1)
         }
 
@@ -278,13 +271,13 @@ export default function Boucher() {
                         </td>
                         <td style={tdStyle}>
                           <select
-                            value={row?.beanTypeId ?? ''}
-                            onChange={(e) => updateRow(i, 'beanTypeId', e.target.value)}
+                            value={row?.beanType ?? ''}
+                            onChange={(e) => updateRow(i, 'beanType', e.target.value)}
                             style={cellSelectStyle}
                           >
                             <option value="">ရွေးပါ</option>
-                            {beanTypes?.map((bt) => (
-                              <option key={bt.id} value={bt.id}>{bt.name}</option>
+                            {weightMasterList?.map((wm) => (
+                              <option key={wm.id} value={wm.bean_name}>{wm.bean_name}</option>
                             ))}
                           </select>
                         </td>

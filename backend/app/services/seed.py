@@ -52,7 +52,7 @@ BEAN_TYPES = [
     {"name": "ကြို့စေ့", "description": "Kyet seed"},
 ]
 
-# Weight master seed data: bean_type_name -> weight
+# Weight master seed data: bean_name -> weight
 WEIGHT_MASTER_DATA = {
     "ဂျုံ": 60,
     "ကုလားပဲအဝါ": 56.25,
@@ -125,7 +125,10 @@ async def seed_if_empty():
                 logger.info("Database already seeded.")
 
             # Seed weight master for existing DBs that don't have it yet
-            await _seed_weight_master(session)
+            try:
+                await _seed_weight_master(session)
+            except Exception:
+                pass
             return
 
         logger.info("Seeding database...")
@@ -153,14 +156,9 @@ async def seed_if_empty():
         await session.flush()
 
         # Seed weight master
-        for bt_data in BEAN_TYPES:
-            bt = bean_type_map.get(bt_data["name"])
-            if bt and bt_data["name"] in WEIGHT_MASTER_DATA:
-                wm = WeightMaster(
-                    bean_type_id=bt.id,
-                    weight=WEIGHT_MASTER_DATA[bt_data["name"]],
-                )
-                session.add(wm)
+        for bean_name, weight in WEIGHT_MASTER_DATA.items():
+            wm = WeightMaster(bean_name=bean_name, weight=weight)
+            session.add(wm)
 
         await session.commit()
         logger.info(f"Seeded {len(USERS)} users, {len(BEAN_TYPES)} bean types, and {len(WEIGHT_MASTER_DATA)} weight master records")
@@ -172,16 +170,11 @@ async def _seed_weight_master(session):
     if result.scalar_one_or_none() is not None:
         return  # Already seeded
 
-    bt_result = await session.execute(select(BeanType))
-    bean_types = {bt.name: bt for bt in bt_result.scalars().all()}
-
     count = 0
-    for bt_name, weight in WEIGHT_MASTER_DATA.items():
-        bt = bean_types.get(bt_name)
-        if bt:
-            wm = WeightMaster(bean_type_id=bt.id, weight=weight)
-            session.add(wm)
-            count += 1
+    for bean_name, weight in WEIGHT_MASTER_DATA.items():
+        wm = WeightMaster(bean_name=bean_name, weight=weight)
+        session.add(wm)
+        count += 1
 
     if count > 0:
         await session.commit()

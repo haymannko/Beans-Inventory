@@ -80,20 +80,19 @@ export interface AuditLog {
 
 export interface WeightMaster {
   id: string
-  bean_type_id: string
-  bean_type_name: string | null
+  bean_name: string
   weight: number
   created_at: string
   updated_at: string
 }
 
 export interface CreateWeightMasterRequest {
-  bean_type_id: string
+  bean_name: string
   weight: number
 }
 
 export interface UpdateWeightMasterRequest {
-  bean_type_id?: string
+  bean_name?: string
   weight?: number
 }
 
