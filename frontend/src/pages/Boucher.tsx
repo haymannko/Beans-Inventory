@@ -69,22 +69,64 @@ export default function Boucher() {
   // Fuzzy lookup: exact → contains (either direction)
   const lookupWeight = (beanType: string): number => {
     if (!beanType) return 0
-    if (DEFAULT_WEIGHTS[beanType]) return DEFAULT_WEIGHTS[beanType]
-    const lower = beanType.toLowerCase()
-    for (const [name, weight] of Object.entries(DEFAULT_WEIGHTS)) {
-      if (name.toLowerCase().includes(lower) || lower.includes(name.toLowerCase())) return weight
+
+    const key = beanType.trim()
+
+    // 1. Database first
+    const dbWeight = weightMasterList?.find(
+      (w) => w.bean_name.trim() === key
+    )
+
+    if (dbWeight) {
+      return Number(dbWeight.weight)
     }
-    return 0
+
+    // 2. Hardcoded fallback
+    if (key in DEFAULT_WEIGHTS) {
+      return DEFAULT_WEIGHTS[key]
+    }
+
+    // 3. Fuzzy search
+    const lower = key.toLowerCase()
+
+    const match = Object.entries(DEFAULT_WEIGHTS).find(([name]) => {
+      const n = name.toLowerCase()
+      return n.includes(lower) || lower.includes(n)
+    })
+
+    return match ? match[1] : 0
   }
 
-  const updateRow = (idx: number, field: keyof Row, value: number | string) => {
-    setRows((prev) =>
+  const updateRow = (
+    idx: number,
+    field: keyof Row,
+    value: number | string
+  ) => {
+    setRows(prev =>
       prev.map((r, i) => {
         if (i !== idx) return r
-        const updated = { ...r, [field]: value }
 
-        // Formula: ထည့်ဝင်သည့်အလေးချိန် × အိတ် × ဈေးနှုန်း / အသားအလေးချိန် = သင့်ငွေ
-        updated.amount = updated.bags * updated.weight * updated.rate / (lookupWeight(updated.beanType) || 1)
+        const updated = {
+          ...r,
+          [field]: value,
+        }
+
+        const masterWeight = lookupWeight(updated.beanType)
+
+        if (
+          masterWeight > 0 &&
+          updated.weight > 0 &&
+          updated.bags > 0 &&
+          updated.rate > 0
+        ) {
+          updated.amount =
+            (updated.weight *
+              updated.bags *
+              updated.rate) /
+            masterWeight
+        } else {
+          updated.amount = 0
+        }
 
         return updated
       })
