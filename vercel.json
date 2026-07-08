@@ -1,9 +1,7 @@
 {
-  "functions": {
-    "api/**/*.py": {
-      "includeFiles": "backend/**"
-    }
-  },
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "cd frontend && npm install",
   "rewrites": [
     {
       "source": "/api/:match*",
