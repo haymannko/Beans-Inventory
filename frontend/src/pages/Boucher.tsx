@@ -329,7 +329,6 @@ export default function Boucher() {
                             value={row?.beanType ?? ''}
                             onChange={(e) => updateRow(i, 'beanType', e.target.value)}
                             style={cellInputStyle}
-                            placeholder="ပဲအမျိုးအစား"
                           />
                           <datalist id={`bean-list-${i}`}>
                             {Object.keys(DEFAULT_WEIGHTS).map((name) => (
