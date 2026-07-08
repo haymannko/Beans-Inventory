@@ -66,6 +66,17 @@ export default function Boucher() {
 
   const { data: weightMasterList } = useWeightMasterList()
 
+  // Fuzzy lookup: exact → contains (either direction)
+  const lookupWeight = (beanType: string): number => {
+    if (!beanType) return 0
+    if (DEFAULT_WEIGHTS[beanType]) return DEFAULT_WEIGHTS[beanType]
+    const lower = beanType.toLowerCase()
+    for (const [name, weight] of Object.entries(DEFAULT_WEIGHTS)) {
+      if (name.toLowerCase().includes(lower) || lower.includes(name.toLowerCase())) return weight
+    }
+    return 0
+  }
+
   const updateRow = (idx: number, field: keyof Row, value: number | string) => {
     setRows((prev) =>
       prev.map((r, i) => {
@@ -73,7 +84,7 @@ export default function Boucher() {
         const updated = { ...r, [field]: value }
 
         // Formula: ထည့်ဝင်သည့်အလေးချိန် × အိတ် × ဈေးနှုန်း / အသားအလေးချိန် = သင့်ငွေ
-        updated.amount = updated.bags * updated.weight * updated.rate / (DEFAULT_WEIGHTS[updated.beanType] || 1)
+        updated.amount = updated.bags * updated.weight * updated.rate / (lookupWeight(updated.beanType) || 1)
 
         return updated
       })
