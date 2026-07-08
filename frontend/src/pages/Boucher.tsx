@@ -100,6 +100,20 @@ export default function Boucher() {
 
     return 0
   }
+  const masterWeight = lookupWeight(updated.beanType)
+
+  const total =
+  updated.weight * updated.bags * updated.rate
+
+  console.log({
+    beanType: updated.beanType,
+    weight: updated.weight,
+    bags: updated.bags,
+    rate: updated.rate,
+    masterWeight,
+    total,
+    amount: masterWeight > 0 ? total / masterWeight : 0,
+  })
 
   const updateRow = (
     idx: number,
@@ -305,7 +319,6 @@ export default function Boucher() {
                     <th style={{ ...thStyle, width: 200 }}>ကုန်အမျိုးအမည်</th>
                     <th style={{ ...thStyle, width: 80 }}>ထည့်ဝင်သည့်အလေးချိန်</th>
                     <th style={{ ...thStyle, width: 48 }}>အိတ်</th>
-                    <th style={{ ...thStyle, width: 64 }}>ပိဿာ</th>
                     <th style={{ ...thStyle, width: 100 }}>ဈေးနှုန်း</th>
                     <th style={{ ...thStyle, width: 200 }}>သင့်ငွေ(ကျပ်)</th>
                   </tr>
@@ -379,7 +392,7 @@ export default function Boucher() {
                 <tfoot>
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={4}
                       style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: RED, borderBottom: 'none', borderTop: `2px solid ${BORDER_COLOR}` }}
                     >
                       စုစုပေါင်း
