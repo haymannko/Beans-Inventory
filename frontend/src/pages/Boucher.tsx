@@ -27,6 +27,39 @@ const createRow = (): Row => ({
 
 const TOTAL_ROWS = 12
 
+// Hardcoded default weights per bean type (အသားအလေးချိန်)
+const DEFAULT_WEIGHTS: Record<string, number> = {
+  'ဂျုံ': 60,
+  'ကုလားပဲအဝါ': 56.25,
+  'နှမ်း': 45,
+  'ပြောင်းဖူးစေ့': 54,
+  'ခွန်ပြောင်းအနက်': 53,
+  'အထွက်တိုးပြောင်း': 53,
+  'သိပ္ပံပြောင်း': 53,
+  'ဆန်ပြောင်း': 59.25,
+  'ကုလားပဲဖြူ ကြီး': 57.25,
+  'ကုလားပဲဖြူ သေး': 57.25,
+  'ပဲဒီစိမ်း': 56.25,
+  'စွန်တာပြာ': 58.25,
+  'မတ်ပဲ': 60,
+  'ပဲစင်းငုံ': 60,
+  'နံနံ': 24,
+  'ပဲလိပ်ပြာ / ပဲကြား': 56.25,
+  'ပဲနီပြား': 55.25,
+  'မြေထောက်ပဲ': 54,
+  'တရုတ်ပဲကြီး': 50,
+  'နိုင်လွန်ပဲ': 59.25,
+  'စားတော်ပဲ': 59.25,
+  'ပဲလွန်းဖြူ': 60,
+  'ပဲလွန်းပြာ': 54.25,
+  'ပဲလွန်းဝါ': 54.25,
+  'ထောပတ်ဖြူ ကြီး/သေး': 56.25,
+  'ပဲကြီးမျိုးစုံ / ရွှေယင်းမာ': 55.25,
+  'ပဲပုတ်စေ့': 53.25,
+  'ပဲရာဇာ': 61.25,
+  'ပဲယဉ်း': 60,
+}
+
 export default function Boucher() {
   const [voucherNumber, setVoucherNumber] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
@@ -35,12 +68,18 @@ export default function Boucher() {
 
   const { data: weightMasterList } = useWeightMasterList()
 
-  // Build a lookup map: bean_name -> weight
-  const weightMap = new Map<string, number>()
-  if (weightMasterList) {
-    for (const wm of weightMasterList) {
-      weightMap.set(wm.bean_name, wm.weight)
+  // Lookup weight for a bean type: exact → fuzzy match
+  const lookupWeight = (beanType: string): number => {
+    if (!beanType) return 0
+    // Exact match
+    if (DEFAULT_WEIGHTS[beanType]) return DEFAULT_WEIGHTS[beanType]
+    // Fuzzy: check if any key contains the input or vice versa
+    const lower = beanType.toLowerCase()
+    for (const [name, weight] of Object.entries(DEFAULT_WEIGHTS)) {
+      const nameLower = name.toLowerCase()
+      if (nameLower.includes(lower) || lower.includes(nameLower)) return weight
     }
+    return 0
   }
 
   const updateRow = (idx: number, field: keyof Row, value: number | string) => {
@@ -49,20 +88,17 @@ export default function Boucher() {
         if (i !== idx) return r
         const updated = { ...r, [field]: value }
 
-        // When bean type changes, auto-load weight from master
+        // When bean type changes, auto-load weight
         if (field === 'beanType') {
-          const masterWeight = weightMap.get(value as string) || 0
-          updated.weightMaster = masterWeight
-          updated.amount = updated.bags * updated.weight * updated.rate / (masterWeight || 1)
+          updated.weightMaster = lookupWeight(value as string)
         }
 
-        // Recalculate amount when bags, weight, or rate changes
-        if (field === 'bags' || field === 'weight' || field === 'rate') {
-          const b = field === 'bags' ? Number(value) : r.bags
-          const w = field === 'weight' ? Number(value) : r.weight
-          const p = field === 'rate' ? Number(value) : r.rate
-          updated.amount = b * w * p / (updated.weightMaster || 1)
-        }
+        // Formula: ထည့်ဝင်သည့်အလေးချိန် × အိတ် × ဈေးနှုန်း / အသားအလေးချိန် = သင့်ငွေ
+        const b = field === 'bags' ? Number(value) : r.bags
+        const w = field === 'weight' ? Number(value) : r.weight
+        const p = field === 'rate' ? Number(value) : r.rate
+        const wm = updated.weightMaster || 1
+        updated.amount = b * w * p / wm
 
         return updated
       })
