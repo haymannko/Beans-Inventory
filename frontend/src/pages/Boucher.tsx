@@ -12,7 +12,6 @@ interface Row {
   weight: number
   rate: number
   amount: number
-  weightMaster: number
 }
 
 const createRow = (): Row => ({
@@ -22,7 +21,6 @@ const createRow = (): Row => ({
   weight: 0,
   rate: 0,
   amount: 0,
-  weightMaster: 0,
 })
 
 const TOTAL_ROWS = 12
@@ -68,37 +66,14 @@ export default function Boucher() {
 
   const { data: weightMasterList } = useWeightMasterList()
 
-  // Lookup weight for a bean type: exact → fuzzy match
-  const lookupWeight = (beanType: string): number => {
-    if (!beanType) return 0
-    // Exact match
-    if (DEFAULT_WEIGHTS[beanType]) return DEFAULT_WEIGHTS[beanType]
-    // Fuzzy: check if any key contains the input or vice versa
-    const lower = beanType.toLowerCase()
-    for (const [name, weight] of Object.entries(DEFAULT_WEIGHTS)) {
-      const nameLower = name.toLowerCase()
-      if (nameLower.includes(lower) || lower.includes(nameLower)) return weight
-    }
-    return 0
-  }
-
   const updateRow = (idx: number, field: keyof Row, value: number | string) => {
     setRows((prev) =>
       prev.map((r, i) => {
         if (i !== idx) return r
         const updated = { ...r, [field]: value }
 
-        // When bean type changes, auto-load weight
-        if (field === 'beanType') {
-          updated.weightMaster = lookupWeight(value as string)
-        }
-
         // Formula: ထည့်ဝင်သည့်အလေးချိန် × အိတ် × ဈေးနှုန်း / အသားအလေးချိန် = သင့်ငွေ
-        const b = field === 'bags' ? Number(value) : r.bags
-        const w = field === 'weight' ? Number(value) : r.weight
-        const p = field === 'rate' ? Number(value) : r.rate
-        const wm = updated.weightMaster || 1
-        updated.amount = b * w * p / wm
+        updated.amount = updated.bags * updated.weight * updated.rate / (DEFAULT_WEIGHTS[updated.beanType] || 1)
 
         return updated
       })
@@ -338,9 +313,6 @@ export default function Boucher() {
                             style={{ ...cellInputStyle, textAlign: 'right' }}
                             min="0"
                           />
-                        </td>
-                        <td style={{ ...tdStyle, textAlign: 'center', fontSize: 11, color: '#888' }}>
-                          {row?.weightMaster || ''}
                         </td>
                         <td style={tdStyle}>
                           <input
