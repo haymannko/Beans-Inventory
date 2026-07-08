@@ -52,10 +52,19 @@ const DEFAULT_WEIGHTS: Record<string, number> = {
   'ပဲလွန်းပြာ': 54.25,
   'ပဲလွန်းဝါ': 54.25,
   'ထောပတ်ဖြူ ကြီး/သေး': 56.25,
+  'ပဲကြီး': 55.25,
   'ပဲကြီးမျိုးစုံ / ရွှေယင်းမာ': 55.25,
   'ပဲပုတ်စေ့': 53.25,
   'ပဲရာဇာ': 61.25,
   'ပဲယဉ်း': 60,
+  'ခေတ်သစ် (ခ) ပဲဖြူလေး': 57.25,
+  'ဆီနေကြာ': 27,
+  'ပန်းနှမ်း': 45,
+  'မိုးလေးနှမ်း': 49.25,
+  'ကြက်ဆူအကြား (နီကြား/ဖြူကြား)': 36,
+  'ကြက်ဆူအနက်': 30,
+  'ကဇင်းသီး': 37.25,
+  'ကြို့စေ့': 38.25,
 }
 
 export default function Boucher() {
@@ -66,35 +75,30 @@ export default function Boucher() {
 
   const { data: weightMasterList } = useWeightMasterList()
 
-  // Fuzzy lookup: exact → contains (either direction)
+  // Weight lookup: DB first → DEFAULT_WEIGHTS exact → DEFAULT_WEIGHTS fuzzy → 0
   const lookupWeight = (beanType: string): number => {
     if (!beanType) return 0
-
     const key = beanType.trim()
 
-    // 1. Database first
-    const dbWeight = weightMasterList?.find(
-      (w) => w.bean_name.trim() === key
+    // 1. DB exact match
+    const dbExact = weightMasterList?.find((w) => w.bean_name.trim() === key)
+    if (dbExact) return Number(dbExact.weight)
+
+    // 2. DEFAULT_WEIGHTS exact match
+    if (key in DEFAULT_WEIGHTS) return DEFAULT_WEIGHTS[key]
+
+    // 3. DB fuzzy match
+    const dbFuzzy = weightMasterList?.find(
+      (w) => w.bean_name.includes(key) || key.includes(w.bean_name)
     )
+    if (dbFuzzy) return Number(dbFuzzy.weight)
 
-    if (dbWeight) {
-      return Number(dbWeight.weight)
+    // 4. DEFAULT_WEIGHTS fuzzy match
+    for (const [name, weight] of Object.entries(DEFAULT_WEIGHTS)) {
+      if (name.includes(key) || key.includes(name)) return weight
     }
 
-    // 2. Hardcoded fallback
-    if (key in DEFAULT_WEIGHTS) {
-      return DEFAULT_WEIGHTS[key]
-    }
-
-    // 3. Fuzzy search
-    const lower = key.toLowerCase()
-
-    const match = Object.entries(DEFAULT_WEIGHTS).find(([name]) => {
-      const n = name.toLowerCase()
-      return n.includes(lower) || lower.includes(n)
-    })
-
-    return match ? match[1] : 0
+    return 0
   }
 
   const updateRow = (
@@ -102,28 +106,16 @@ export default function Boucher() {
     field: keyof Row,
     value: number | string
   ) => {
-    setRows(prev =>
+    setRows((prev) =>
       prev.map((r, i) => {
         if (i !== idx) return r
+        const updated = { ...r, [field]: value }
 
-        const updated = {
-          ...r,
-          [field]: value,
-        }
-
+        // Formula: ထည့်ဝင်သည့်အလေးချိန် × အိတ် × ဈေးနှုန်း / အသားအလေးချိန် = သင့်ငွေ
         const masterWeight = lookupWeight(updated.beanType)
-
-        if (
-          masterWeight > 0 &&
-          updated.weight > 0 &&
-          updated.bags > 0 &&
-          updated.rate > 0
-        ) {
+        if (masterWeight > 0) {
           updated.amount =
-            (updated.weight *
-              updated.bags *
-              updated.rate) /
-            masterWeight
+            (updated.weight * updated.bags * updated.rate) / masterWeight
         } else {
           updated.amount = 0
         }
@@ -245,7 +237,7 @@ export default function Boucher() {
                 />
               </div>
 
-              {/* ===== RED HEADER BANNER ===== */}
+              {/* ===== BUSINESS TYPE ===== */}
               <div style={headerBannerStyle}>
                 <div
                   style={{
@@ -254,7 +246,6 @@ export default function Boucher() {
                     alignItems: 'center',
                   }}
                 >
-                  {/* ===== BUSINESS TYPE (red) ===== */}
                   <div style={{ textAlign: 'center', marginBottom: 2 }}>
                     <p
                       style={{
@@ -269,7 +260,6 @@ export default function Boucher() {
                   </div>
                 </div>
               </div>
-
 
               {/* ===== ADDRESS ===== */}
               <div style={{ textAlign: 'center', marginBottom: 2 }}>
@@ -343,6 +333,9 @@ export default function Boucher() {
                             placeholder="ပဲအမျိုးအစား"
                           />
                           <datalist id={`bean-list-${i}`}>
+                            {Object.keys(DEFAULT_WEIGHTS).map((name) => (
+                              <option key={name} value={name} />
+                            ))}
                             {weightMasterList?.map((wm) => (
                               <option key={wm.id} value={wm.bean_name} />
                             ))}
@@ -410,42 +403,34 @@ export default function Boucher() {
 
               {/* ===== FOOTER FIELDS ===== */}
               <div style={{ marginTop: 14, paddingTop: 6, fontSize: 12 }}>
-                {/* Row 1: ကားခ + လက်ခံရရှိ */}
                 <div style={footerRowStyle}>
                   <FieldLine label="ကားခ" />
                   <FieldLine label="လက်ခံရရှိ" />
                 </div>
-                {/* Row 2: ချိန်ခ + မှတ်ချက် */}
                 <div style={footerRowStyle}>
                   <FieldLine label="ချိန်ခ" />
                   <FieldLine label="မှတ်ချက်" />
                 </div>
-                {/* Row 3: ချခ + ထောက်ခံ */}
                 <div style={footerRowStyle}>
                   <FieldLine label="ချခ" />
                   <FieldLine label="ထောက်ခံ" />
                 </div>
-                {/* Row 4: ကော်မရှင်ခ + လက်မှတ် */}
                 <div style={footerRowStyle}>
                   <FieldLine label="ကော်မရှင်ခ" />
                   <FieldLine label="လက်မှတ်" />
                 </div>
-                {/* Row 5: အသုံး (left only) */}
                 <div style={footerRowStyle}>
                   <FieldLine label="အသုံး" />
                   <div style={{ flex: 1 }} />
                 </div>
-                {/* Row 6: ခုနှိမ်ငွေ (left only) */}
                 <div style={footerRowStyle}>
                   <FieldLine label="ခုနှိမ်ငွေ" />
                   <div style={{ flex: 1 }} />
                 </div>
-                {/* Totals row: စုစုပေါင်း ခုနှိမ်ငွေ (full width) */}
                 <div style={footerRowStyle}>
                   <FieldLine label="စုစုပေါင်း ခုနှိမ်ငွေ" />
                   <div style={{ flex: 1 }} />
                 </div>
-                {/* Remaining: ကျန်ငွေ (full width) */}
                 <div style={{ display: 'flex', gap: 24 }}>
                   <FieldLine label="ကျန်ငွေ" />
                   <div style={{ flex: 1 }} />
@@ -494,7 +479,7 @@ function FieldLine({ label }: { label: string }) {
 /* ==================== STYLE OBJECTS ==================== */
 
 const voucherOuterStyle: React.CSSProperties = {
-  maxWidth: 210 * 3.78, // A4 width in px at 96dpi
+  maxWidth: 210 * 3.78,
   margin: '0 auto',
   background: '#fdf0ec',
   fontFamily: '"Noto Sans Myanmar", "Pyidaungsu", "Myanmar Text", "Tharlon", serif',
@@ -580,7 +565,6 @@ const cellInputStyle: React.CSSProperties = {
   fontFamily: 'inherit',
   boxSizing: 'border-box',
 }
-
 
 const footerRowStyle: React.CSSProperties = {
   display: 'flex',
