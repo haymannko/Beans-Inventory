@@ -520,18 +520,6 @@ const cellInputStyle: React.CSSProperties = {
   boxSizing: 'border-box',
 }
 
-const cellSelectStyle: React.CSSProperties = {
-  width: '100%',
-  background: 'transparent',
-  outline: 'none',
-  border: 'none',
-  fontSize: 12,
-  color: '#374151',
-  padding: 0,
-  fontFamily: 'inherit',
-  boxSizing: 'border-box',
-  cursor: 'pointer',
-}
 
 const footerRowStyle: React.CSSProperties = {
   display: 'flex',
