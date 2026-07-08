@@ -40,7 +40,8 @@ async def get_bean_type(
     _user: User = Depends(get_current_user),
 ):
     """Get a single bean type by ID."""
-    result = await db.execute(select(BeanType).where(BeanType.id == bean_type_id))
+    bean_type_id_str = str(bean_type_id)
+    result = await db.execute(select(BeanType).where(BeanType.id == bean_type_id_str))
     bean_type = result.scalar_one_or_none()
     if bean_type is None:
         raise HTTPException(status_code=404, detail="Bean type not found")
@@ -79,14 +80,15 @@ async def update_bean_type(
     user: User = Depends(get_current_user),
 ):
     """Update a bean type."""
-    result = await db.execute(select(BeanType).where(BeanType.id == bean_type_id))
+    bean_type_id_str = str(bean_type_id)
+    result = await db.execute(select(BeanType).where(BeanType.id == bean_type_id_str))
     bean_type = result.scalar_one_or_none()
     if bean_type is None:
         raise HTTPException(status_code=404, detail="Bean type not found")
 
     if request.name is not None:
         existing = await db.execute(
-            select(BeanType).where(BeanType.name == request.name, BeanType.id != bean_type_id)
+            select(BeanType).where(BeanType.name == request.name, BeanType.id != bean_type_id_str)
         )
         if existing.scalar_one_or_none():
             raise HTTPException(status_code=400, detail="Bean type name already exists")
@@ -113,14 +115,15 @@ async def delete_bean_type(
     user: User = Depends(get_current_user),
 ):
     """Delete a bean type."""
-    result = await db.execute(select(BeanType).where(BeanType.id == bean_type_id))
+    bean_type_id_str = str(bean_type_id)
+    result = await db.execute(select(BeanType).where(BeanType.id == bean_type_id_str))
     bean_type = result.scalar_one_or_none()
     if bean_type is None:
         raise HTTPException(status_code=404, detail="Bean type not found")
 
     await db.delete(bean_type)
     await create_audit_log(
-        db, user.id, "DELETE", "bean_types", bean_type_id,
+        db, user.id, "DELETE", "bean_types", bean_type_id_str,
         {"name": bean_type.name}
     )
 

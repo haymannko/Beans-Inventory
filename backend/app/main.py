@@ -79,23 +79,7 @@ async def startup():
         from app.services.seed import seed_if_empty
 
         async with engine.begin() as conn:
-            # Migrate: recreate weight_master if schema changed
-            try:
-                from sqlalchemy import text
-                await conn.execute(text("DROP TABLE IF EXISTS weight_master"))
-            except Exception:
-                pass
             await conn.run_sync(Base.metadata.create_all)
-            # Migrate: add new columns if they don't exist
-            for col in ("transport_fee", "labor_fee"):
-                try:
-                    await conn.execute(
-                        __import__("sqlalchemy").text(
-                            f"ALTER TABLE arrivals ADD COLUMN {col} NUMERIC(12,2) NOT NULL DEFAULT 0"
-                        )
-                    )
-                except Exception:
-                    pass  # column already exists
         await seed_if_empty()
         logger.info("Database tables and seed data ready")
     except Exception as e:

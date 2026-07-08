@@ -58,7 +58,7 @@ async def list_sales(
     query = select(Sale).order_by(Sale.sale_date.desc(), Sale.created_at.desc())
 
     if bean_type_id:
-        query = query.where(Sale.bean_type_id == bean_type_id)
+        query = query.where(Sale.bean_type_id == str(bean_type_id))
     if start_date:
         query = query.where(Sale.sale_date >= start_date)
     if end_date:

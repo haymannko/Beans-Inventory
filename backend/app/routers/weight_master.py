@@ -40,7 +40,8 @@ async def get_weight_master(
     db: AsyncSession = Depends(get_db),
     _user: User = Depends(get_current_user),
 ):
-    result = await db.execute(select(WeightMaster).where(WeightMaster.id == weight_id))
+    weight_id_str = str(weight_id)
+    result = await db.execute(select(WeightMaster).where(WeightMaster.id == weight_id_str))
     wm = result.scalar_one_or_none()
     if wm is None:
         raise HTTPException(status_code=404, detail="Weight master not found")
@@ -88,14 +89,15 @@ async def update_weight_master(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    result = await db.execute(select(WeightMaster).where(WeightMaster.id == weight_id))
+    weight_id_str = str(weight_id)
+    result = await db.execute(select(WeightMaster).where(WeightMaster.id == weight_id_str))
     wm = result.scalar_one_or_none()
     if wm is None:
         raise HTTPException(status_code=404, detail="Weight master not found")
 
     if request.bean_name is not None:
         existing = await db.execute(
-            select(WeightMaster).where(WeightMaster.bean_name == request.bean_name, WeightMaster.id != weight_id)
+            select(WeightMaster).where(WeightMaster.bean_name == request.bean_name, WeightMaster.id != weight_id_str)
         )
         if existing.scalar_one_or_none():
             raise HTTPException(status_code=400, detail="Bean name already exists")
@@ -116,10 +118,11 @@ async def delete_weight_master(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    result = await db.execute(select(WeightMaster).where(WeightMaster.id == weight_id))
+    weight_id_str = str(weight_id)
+    result = await db.execute(select(WeightMaster).where(WeightMaster.id == weight_id_str))
     wm = result.scalar_one_or_none()
     if wm is None:
         raise HTTPException(status_code=404, detail="Weight master not found")
     await db.delete(wm)
-    await create_audit_log(db, user.id, "DELETE", "weight_master", weight_id, {"bean_name": wm.bean_name})
+    await create_audit_log(db, user.id, "DELETE", "weight_master", weight_id_str, {"bean_name": wm.bean_name})
     return {"message": "Weight master deleted successfully"}

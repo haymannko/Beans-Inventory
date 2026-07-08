@@ -63,7 +63,8 @@ async def update_user(
     admin: User = Depends(get_current_admin_user),
 ):
     """Update a user (admin only)."""
-    result = await db.execute(select(User).where(User.id == user_id))
+    user_id_str = str(user_id)
+    result = await db.execute(select(User).where(User.id == user_id_str))
     user = result.scalar_one_or_none()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -71,7 +72,7 @@ async def update_user(
     if request.username is not None:
         # Check if new username is taken
         existing = await db.execute(
-            select(User).where(User.username == request.username, User.id != user_id)
+            select(User).where(User.username == request.username, User.id != user_id_str)
         )
         if existing.scalar_one_or_none():
             raise HTTPException(status_code=400, detail="Username already exists")
@@ -98,7 +99,8 @@ async def delete_user(
     admin: User = Depends(get_current_admin_user),
 ):
     """Delete a user (admin only)."""
-    result = await db.execute(select(User).where(User.id == user_id))
+    user_id_str = str(user_id)
+    result = await db.execute(select(User).where(User.id == user_id_str))
     user = result.scalar_one_or_none()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -108,7 +110,7 @@ async def delete_user(
 
     await db.delete(user)
     await create_audit_log(
-        db, admin.id, "DELETE", "users", user_id,
+        db, admin.id, "DELETE", "users", user_id_str,
         {"username": user.username}
     )
 

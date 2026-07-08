@@ -30,7 +30,7 @@ async def list_storages(
     query = select(Storage).order_by(Storage.storage_date.desc(), Storage.created_at.desc())
 
     if bean_type_id:
-        query = query.where(Storage.bean_type_id == bean_type_id)
+        query = query.where(Storage.bean_type_id == str(bean_type_id))
     if start_date:
         query = query.where(Storage.storage_date >= start_date)
     if end_date:

@@ -33,7 +33,7 @@ async def list_adjustments(
     )
 
     if bean_type_id:
-        query = query.where(StockAdjustment.bean_type_id == bean_type_id)
+        query = query.where(StockAdjustment.bean_type_id == str(bean_type_id))
     if start_date:
         query = query.where(StockAdjustment.adjustment_date >= start_date)
     if end_date:

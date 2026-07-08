@@ -270,16 +270,19 @@ export default function Boucher() {
                           />
                         </td>
                         <td style={tdStyle}>
-                          <select
+                          <input
+                            type="text"
+                            list={`bean-list-${i}`}
                             value={row?.beanType ?? ''}
                             onChange={(e) => updateRow(i, 'beanType', e.target.value)}
-                            style={cellSelectStyle}
-                          >
-                            <option value="">ရွေးပါ</option>
+                            style={cellInputStyle}
+                            placeholder="ပဲအမျိုးအစား"
+                          />
+                          <datalist id={`bean-list-${i}`}>
                             {weightMasterList?.map((wm) => (
-                              <option key={wm.id} value={wm.bean_name}>{wm.bean_name}</option>
+                              <option key={wm.id} value={wm.bean_name} />
                             ))}
-                          </select>
+                          </datalist>
                         </td>
                         <td style={{ ...tdStyle, textAlign: 'center' }}>
                           <input
