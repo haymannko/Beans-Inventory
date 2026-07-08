@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FiPrinter } from 'react-icons/fi'
 import { useWeightMasterList } from '../hooks/useWeightMaster'
 
@@ -27,6 +27,39 @@ const createRow = (): Row => ({
 
 const TOTAL_ROWS = 12
 
+// Hardcoded fallback weights (used when API weight_master is not loaded yet)
+const FALLBACK_WEIGHTS: Record<string, number> = {
+  'ဂျုံ': 60,
+  'ကုလားပဲအဝါ': 56.25,
+  'နှမ်း': 45,
+  'ပြောင်းဖူးစေ့': 54,
+  'ခွန်ပြောင်းအနက်': 53,
+  'အထွက်တိုးပြောင်း': 53,
+  'သိပ္ပံပြောင်း': 53,
+  'ဆန်ပြောင်း': 59.25,
+  'ကုလားပဲဖြူ ကြီး': 57.25,
+  'ကုလားပဲဖြူ သေး': 57.25,
+  'ပဲဒီစိမ်း': 56.25,
+  'စွန်တာပြာ': 58.25,
+  'မတ်ပဲ': 60,
+  'ပဲစင်းငုံ': 60,
+  'နံနံ': 24,
+  'ပဲလိပ်ပြာ / ပဲကြား': 56.25,
+  'ပဲနီပြား': 55.25,
+  'မြေထောက်ပဲ': 54,
+  'တရုတ်ပဲကြီး': 50,
+  'နိုင်လွန်ပဲ': 59.25,
+  'စားတော်ပဲ': 59.25,
+  'ပဲလွန်းဖြူ': 60,
+  'ပဲလွန်းပြာ': 54.25,
+  'ပဲလွန်းဝါ': 54.25,
+  'ထောပတ်ဖြူ ကြီး/သေး': 56.25,
+  'ပဲကြီးမျိုးစုံ / ရွှေယင်းမာ': 55.25,
+  'ပဲပုတ်စေ့': 53.25,
+  'ပဲရာဇာ': 61.25,
+  'ပဲယဉ်း': 60,
+}
+
 export default function Boucher() {
   const [voucherNumber, setVoucherNumber] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
@@ -35,13 +68,48 @@ export default function Boucher() {
 
   const { data: weightMasterList } = useWeightMasterList()
 
-  // Build a lookup map: bean_name -> weight
+  // Build combined lookup: API data + fallback
   const weightMap = new Map<string, number>()
+  // Add fallback first
+  for (const [name, weight] of Object.entries(FALLBACK_WEIGHTS)) {
+    weightMap.set(name, weight)
+  }
+  // API data overrides fallback
   if (weightMasterList) {
     for (const wm of weightMasterList) {
       weightMap.set(wm.bean_name, wm.weight)
     }
   }
+
+  // Lookup: exact → contains (either direction)
+  const lookupWeight = (beanType: string): number => {
+    if (!beanType) return 0
+    // Exact match
+    const exact = weightMap.get(beanType)
+    if (exact !== undefined) return exact
+    // Fuzzy: check if any key contains the input or vice versa
+    const lower = beanType.toLowerCase()
+    for (const [name, weight] of weightMap) {
+      const nameLower = name.toLowerCase()
+      if (nameLower.includes(lower) || lower.includes(nameLower)) return weight
+    }
+    return 0
+  }
+
+  // Recalculate ALL rows when weightMasterList loads (API data may override fallback)
+  useEffect(() => {
+    setRows((prev) =>
+      prev.map((r) => {
+        if (!r.beanType) return r
+        const masterWeight = lookupWeight(r.beanType)
+        if (masterWeight === r.weightMaster && masterWeight !== 0) return r
+        const updated = { ...r, weightMaster: masterWeight }
+        // Formula: ထည့်ဝင်သည့်အလေးချိန် × အိတ် × ဈေးနှုန်း / အသားအလေးချိန်
+        updated.amount = updated.bags * updated.weight * updated.rate / (masterWeight || 1)
+        return updated
+      })
+    )
+  }, [weightMasterList])
 
   const updateRow = (idx: number, field: keyof Row, value: number | string) => {
     setRows((prev) =>
@@ -51,18 +119,17 @@ export default function Boucher() {
 
         // When bean type changes, auto-load weight from master
         if (field === 'beanType') {
-          const masterWeight = weightMap.get(value as string) || 0
+          const masterWeight = lookupWeight(value as string)
           updated.weightMaster = masterWeight
-          updated.amount = updated.bags * updated.weight * updated.rate / (masterWeight || 1)
         }
 
-        // Recalculate amount when bags, weight, or rate changes
-        if (field === 'bags' || field === 'weight' || field === 'rate') {
-          const b = field === 'bags' ? Number(value) : r.bags
-          const w = field === 'weight' ? Number(value) : r.weight
-          const p = field === 'rate' ? Number(value) : r.rate
-          updated.amount = b * w * p / (updated.weightMaster || 1)
-        }
+        // ALWAYS recalculate amount using formula:
+        // သင့်ငွေ(ကျပ်) = ထည့်ဝင်သည့်အလေးချိန် × အိတ် × ဈေးနှုန်း / အသားအလေးချိန်
+        const b = field === 'bags' ? Number(value) : r.bags
+        const w = field === 'weight' ? Number(value) : r.weight
+        const p = field === 'rate' ? Number(value) : r.rate
+        const wm = updated.weightMaster || 1
+        updated.amount = b * w * p / wm
 
         return updated
       })
