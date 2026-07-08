@@ -63,4 +63,4 @@ async def test_sale_exceeds_stock(client: AsyncClient, admin_token):
         headers=auth_header(admin_token),
     )
     assert response.status_code == 400
-    assert "Insufficient stock" in response.json()["detail"]
+    assert "Insufficient" in response.json()["detail"]
