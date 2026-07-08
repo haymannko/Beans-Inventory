@@ -100,20 +100,6 @@ export default function Boucher() {
 
     return 0
   }
-  const masterWeight = lookupWeight(updated.beanType)
-
-  const total =
-  updated.weight * updated.bags * updated.rate
-
-  console.log({
-    beanType: updated.beanType,
-    weight: updated.weight,
-    bags: updated.bags,
-    rate: updated.rate,
-    masterWeight,
-    total,
-    amount: masterWeight > 0 ? total / masterWeight : 0,
-  })
 
   const updateRow = (
     idx: number,
