@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { FiPrinter } from 'react-icons/fi'
 import { useWeightMasterList } from '../hooks/useWeightMaster'
 
@@ -12,7 +12,6 @@ interface Row {
   weight: number
   rate: number
   amount: number
-  weightMaster: number
 }
 
 const createRow = (): Row => ({
@@ -22,13 +21,12 @@ const createRow = (): Row => ({
   weight: 0,
   rate: 0,
   amount: 0,
-  weightMaster: 0,
 })
 
 const TOTAL_ROWS = 12
 
-// Hardcoded fallback weights (used when API weight_master is not loaded yet)
-const FALLBACK_WEIGHTS: Record<string, number> = {
+// Hardcoded default weights per bean type (အသားအလေးချိန်)
+const DEFAULT_WEIGHTS: Record<string, number> = {
   'ဂျုံ': 60,
   'ကုလားပဲအဝါ': 56.25,
   'နှမ်း': 45,
@@ -68,68 +66,14 @@ export default function Boucher() {
 
   const { data: weightMasterList } = useWeightMasterList()
 
-  // Build combined lookup: API data + fallback
-  const weightMap = new Map<string, number>()
-  // Add fallback first
-  for (const [name, weight] of Object.entries(FALLBACK_WEIGHTS)) {
-    weightMap.set(name, weight)
-  }
-  // API data overrides fallback
-  if (weightMasterList) {
-    for (const wm of weightMasterList) {
-      weightMap.set(wm.bean_name, wm.weight)
-    }
-  }
-
-  // Lookup: exact → contains (either direction)
-  const lookupWeight = (beanType: string): number => {
-    if (!beanType) return 0
-    // Exact match
-    const exact = weightMap.get(beanType)
-    if (exact !== undefined) return exact
-    // Fuzzy: check if any key contains the input or vice versa
-    const lower = beanType.toLowerCase()
-    for (const [name, weight] of weightMap) {
-      const nameLower = name.toLowerCase()
-      if (nameLower.includes(lower) || lower.includes(nameLower)) return weight
-    }
-    return 0
-  }
-
-  // Recalculate ALL rows when weightMasterList loads (API data may override fallback)
-  useEffect(() => {
-    setRows((prev) =>
-      prev.map((r) => {
-        if (!r.beanType) return r
-        const masterWeight = lookupWeight(r.beanType)
-        if (masterWeight === r.weightMaster && masterWeight !== 0) return r
-        const updated = { ...r, weightMaster: masterWeight }
-        // Formula: ထည့်ဝင်သည့်အလေးချိန် × အိတ် × ဈေးနှုန်း / အသားအလေးချိန်
-        updated.amount = updated.bags * updated.weight * updated.rate / (masterWeight || 1)
-        return updated
-      })
-    )
-  }, [weightMasterList])
-
   const updateRow = (idx: number, field: keyof Row, value: number | string) => {
     setRows((prev) =>
       prev.map((r, i) => {
         if (i !== idx) return r
         const updated = { ...r, [field]: value }
 
-        // When bean type changes, auto-load weight from master
-        if (field === 'beanType') {
-          const masterWeight = lookupWeight(value as string)
-          updated.weightMaster = masterWeight
-        }
-
-        // ALWAYS recalculate amount using formula:
-        // သင့်ငွေ(ကျပ်) = ထည့်ဝင်သည့်အလေးချိန် × အိတ် × ဈေးနှုန်း / အသားအလေးချိန်
-        const b = field === 'bags' ? Number(value) : r.bags
-        const w = field === 'weight' ? Number(value) : r.weight
-        const p = field === 'rate' ? Number(value) : r.rate
-        const wm = updated.weightMaster || 1
-        updated.amount = b * w * p / wm
+        // Formula: ထည့်ဝင်သည့်အလေးချိန် × အိတ် × ဈေးနှုန်း / အသားအလေးချိန် = သင့်ငွေ
+        updated.amount = updated.bags * updated.weight * updated.rate / (DEFAULT_WEIGHTS[updated.beanType] || 1)
 
         return updated
       })
@@ -369,9 +313,6 @@ export default function Boucher() {
                             style={{ ...cellInputStyle, textAlign: 'right' }}
                             min="0"
                           />
-                        </td>
-                        <td style={{ ...tdStyle, textAlign: 'center', fontSize: 11, color: '#888' }}>
-                          {row?.weightMaster || ''}
                         </td>
                         <td style={tdStyle}>
                           <input
