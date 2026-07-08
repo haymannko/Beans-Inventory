@@ -378,7 +378,7 @@ export default function Boucher() {
                 <tfoot>
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: RED, borderBottom: 'none', borderTop: `2px solid ${BORDER_COLOR}` }}
                     >
                       စုစုပေါင်း
@@ -395,7 +395,6 @@ export default function Boucher() {
                     >
                       {totalAmount > 0 ? totalAmount.toLocaleString(undefined, { maximumFractionDigits: 2 }) : ''}
                     </td>
-                    <td style={{ ...tdStyle, borderBottom: 'none', borderTop: `2px solid ${BORDER_COLOR}` }} />
                   </tr>
                 </tfoot>
               </table>
