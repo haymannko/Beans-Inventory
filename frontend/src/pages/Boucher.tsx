@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { FiPrinter } from 'react-icons/fi'
 import { useWeightMasterList } from '../hooks/useWeightMaster'
 
@@ -74,28 +74,6 @@ export default function Boucher() {
   const [rows, setRows] = useState<Row[]>(Array.from({ length: TOTAL_ROWS }, createRow))
 
   const { data: weightMasterList } = useWeightMasterList()
-
-  // ---- Mobile scaling ----
-  const voucherRef = useRef<HTMLDivElement>(null)
-  const [scale, setScale] = useState(1)
-  const [naturalHeight, setNaturalHeight] = useState(0)
-
-  const recalcScale = useCallback(() => {
-    if (!voucherRef.current) return
-    const parent = voucherRef.current.parentElement
-    if (!parent) return
-    const available = parent.clientWidth
-    const natural = voucherRef.current.scrollWidth
-    const s = Math.min(1, available / natural)
-    setScale(s)
-    setNaturalHeight(voucherRef.current.scrollHeight)
-  }, [])
-
-  useEffect(() => {
-    recalcScale()
-    window.addEventListener('resize', recalcScale)
-    return () => window.removeEventListener('resize', recalcScale)
-  }, [recalcScale, weightMasterList])
 
   // Weight lookup: DB first → DEFAULT_WEIGHTS exact → DEFAULT_WEIGHTS fuzzy → 0
   const lookupWeight = (beanType: string): number => {
@@ -196,16 +174,16 @@ export default function Boucher() {
       </div>
 
       {/* ==================== VOUCHER ==================== */}
-      <div className="voucher-scaler" style={{ width: '100%', maxWidth: 210 * 3.78, margin: '0 auto' }}>
-        <div
-          ref={voucherRef}
-          style={{
-            width: 210 * 3.78,
-            transformOrigin: 'top left',
-            transform: scale < 1 ? `scale(${scale})` : undefined,
-            height: scale < 1 ? naturalHeight * scale : undefined,
-          }}
-        >
+      <div
+        className="voucher-scroll"
+        style={{
+          width: '100%',
+          maxWidth: 210 * 3.78,
+          margin: '0 auto',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
       <div id="voucher" style={voucherOuterStyle}>
         {/* Outer thick border */}
         <div style={outerBorderStyle}>
@@ -472,7 +450,6 @@ export default function Boucher() {
         </div>
       </div>
       </div>
-      </div>
 
       {/* ===== PRINT STYLES ===== */}
       <style>{printCSS}</style>
@@ -639,15 +616,10 @@ const printCSS = `
       overflow: visible !important;
       display: block !important;
     }
-    .voucher-scaler {
+    .voucher-scroll {
+      overflow: visible !important;
       max-width: none !important;
       width: 210mm !important;
-      transform: none !important;
-      margin: 0 !important;
-    }
-    .voucher-scaler > div {
-      transform: none !important;
-      margin-bottom: 0 !important;
     }
     #voucher {
       box-shadow: none !important;
