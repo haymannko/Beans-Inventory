@@ -1,7 +1,8 @@
+import logging
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -16,6 +17,30 @@ from app.schemas.weight_master import (
 from app.services.audit_service import create_audit_log
 
 router = APIRouter(prefix="/api/weight-master", tags=["Weight Master"])
+logger = logging.getLogger(__name__)
+
+_table_ensured = False
+
+
+async def _ensure_table(db: AsyncSession):
+    """Auto-create weight_master table if it doesn't exist."""
+    global _table_ensured
+    if _table_ensured:
+        return
+    try:
+        result = await db.execute(
+            text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'weight_master')")
+        )
+        if not result.scalar():
+            logger.warning("weight_master table missing — creating it now")
+            from app.db.engine import engine
+            from app.models import Base
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            logger.info("weight_master table created successfully")
+        _table_ensured = True
+    except Exception as e:
+        logger.error(f"Failed to ensure weight_master table: {e}")
 
 
 @router.get("", response_model=list[WeightMasterResponse])
@@ -26,6 +51,7 @@ async def list_weight_master(
     db: AsyncSession = Depends(get_db),
     _user: User = Depends(get_current_user),
 ):
+    await _ensure_table(db)
     query = select(WeightMaster).order_by(WeightMaster.bean_name)
     if search:
         query = query.where(WeightMaster.bean_name.ilike(f"%{search}%"))
