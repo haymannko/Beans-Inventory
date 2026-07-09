@@ -11,7 +11,7 @@ export default function WeightMaster() {
   const [beanName, setBeanName] = useState('')
   const [weight, setWeight] = useState('')
 
-  const { data: weightList, isLoading } = useWeightMasterList(search)
+  const { data: weightList, isLoading, error } = useWeightMasterList(search)
   const createMutation = useCreateWeightMaster()
   const updateMutation = useUpdateWeightMaster()
   const deleteMutation = useDeleteWeightMaster()
@@ -83,6 +83,19 @@ export default function WeightMaster() {
       <div className="card overflow-hidden p-0">
         {isLoading ? (
           <div className="flex items-center justify-center h-32"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" /></div>
+        ) : error ? (
+          <div className="px-4 py-8 text-center text-red-500">
+            <p className="font-medium">Error loading data</p>
+            <p className="text-sm mt-1">
+              {(() => {
+                const axiosError = error as { response?: { data?: { detail?: string | { message?: string } } } }
+                const detail = axiosError?.response?.data?.detail
+                if (typeof detail === 'object' && detail?.message) return detail.message
+                if (typeof detail === 'string') return detail
+                return 'Failed to load weight master data. Please try again.'
+              })()}
+            </p>
+          </div>
         ) : weightList?.length === 0 ? (
           <div className="px-4 py-8 text-center text-gray-500">No records found</div>
         ) : (
