@@ -69,6 +69,34 @@ async def health_check():
     return {"status": "ok", "version": settings.APP_VERSION, "db": db_status}
 
 
+@app.post("/migrate")
+async def run_migrations():
+    """Run database migrations to create missing tables."""
+    try:
+        from app.db.engine import engine
+        from app.models import Base
+
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
+        # Verify weight_master table exists
+        from sqlalchemy import text
+        async with engine.begin() as conn:
+            result = await conn.execute(
+                text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'weight_master')")
+            )
+            table_exists = result.scalar()
+
+        return {
+            "status": "ok",
+            "message": "Migrations completed",
+            "weight_master_table": "exists" if table_exists else "created"
+        }
+    except Exception as e:
+        logger.error(f"Migration error: {e}")
+        return {"status": "error", "message": str(e)}
+
+
 @app.on_event("startup")
 async def startup():
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
