@@ -21,7 +21,7 @@ def _normalize_database_url(url: str) -> str:
 
 class Settings(BaseSettings):
     APP_NAME: str = "Beans Inventory Management System"
-    APP_VERSION: str = "1.0.0"
+    APP_VERSION: str = "1.0.1"
     DEBUG: bool = False
 
     # Database (use sqlite+aiosqlite:///./beans_inventory.db for local dev without PostgreSQL)
