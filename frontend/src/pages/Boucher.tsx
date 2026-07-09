@@ -450,9 +450,6 @@ export default function Boucher() {
         </div>
       </div>
       </div>
-
-      {/* ===== PRINT STYLES ===== */}
-      <style>{printCSS}</style>
     </div>
   )
 }
@@ -586,99 +583,3 @@ const footerRowStyle: React.CSSProperties = {
   gap: 24,
   marginBottom: 4,
 }
-
-/* ==================== PRINT CSS ==================== */
-
-const printCSS = `
-  @media print {
-    @page {
-      size: A4 portrait;
-      margin: 0;
-    }
-    html {
-      overflow: hidden !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-    body {
-      background: white !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      overflow: hidden !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    .no-print {
-      display: none !important;
-    }
-    #voucher-page {
-      padding: 0 !important;
-      background: white !important;
-      min-height: auto !important;
-      height: auto !important;
-      overflow: hidden !important;
-    }
-    .voucher-scroll {
-      overflow: visible !important;
-      overflow-x: visible !important;
-      max-width: none !important;
-      width: 210mm !important;
-      height: auto !important;
-    }
-    #voucher {
-      box-shadow: none !important;
-      width: 210mm !important;
-      min-width: 210mm !important;
-      max-width: 210mm !important;
-      margin: 0 !important;
-      background: #fdf0ec !important;
-      overflow: hidden !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-      break-after: avoid !important;
-      page-break-after: avoid !important;
-    }
-    #voucher > div {
-      border: 3px solid ${RED} !important;
-      margin: 6px !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    #voucher > div > div {
-      border: 1px solid ${RED} !important;
-      margin: 4px !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    #voucher svg {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    #voucher input, #voucher select {
-      border-color: transparent !important;
-      background: transparent !important;
-      color: #000 !important;
-    }
-    table, th, td {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    th {
-      background: ${RED} !important;
-      color: white !important;
-    }
-    tr {
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-    }
-  }
-  #voucher input:focus, #voucher select:focus {
-    outline: none;
-    border-bottom-color: ${RED} !important;
-  }
-  input[type="number"]::-webkit-inner-spin-button {
-    opacity: 0.3;
-  }
-`
