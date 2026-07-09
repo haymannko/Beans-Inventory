@@ -595,13 +595,18 @@ const printCSS = `
       size: A4 portrait;
       margin: 0;
     }
-    html, body {
+    html {
+      overflow: hidden !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    body {
       background: white !important;
       margin: 0 !important;
       padding: 0 !important;
+      overflow: hidden !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
-      overflow: hidden !important;
     }
     .no-print {
       display: none !important;
@@ -610,16 +615,15 @@ const printCSS = `
       padding: 0 !important;
       background: white !important;
       min-height: auto !important;
+      height: auto !important;
       overflow: hidden !important;
-    }
-    #voucher-page > div:first-child {
-      overflow: visible !important;
-      display: block !important;
     }
     .voucher-scroll {
       overflow: visible !important;
+      overflow-x: visible !important;
       max-width: none !important;
       width: 210mm !important;
+      height: auto !important;
     }
     #voucher {
       box-shadow: none !important;
@@ -628,6 +632,7 @@ const printCSS = `
       max-width: 210mm !important;
       margin: 0 !important;
       background: #fdf0ec !important;
+      overflow: hidden !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
       break-inside: avoid !important;
