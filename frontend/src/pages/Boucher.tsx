@@ -128,10 +128,52 @@ export default function Boucher() {
   const totalAmount = rows.reduce((s, x) => s + x.amount, 0)
 
   const handlePrint = () => {
+    // Apply print DOM fixes (belt and suspenders with CSS)
     document.body.classList.add('printing')
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+
+    // Hide Layout elements that don't have .no-print
+    const layoutEl = document.querySelector('.min-h-screen') as HTMLElement
+    const headerEl = document.querySelector('header') as HTMLElement
+    const mainEl = document.querySelector('main') as HTMLElement
+    const sidebarEl = document.querySelector('.lg\\:ml-64') as HTMLElement
+
+    const saved: Array<[HTMLElement, string, string, string, string, string]> = []
+    if (layoutEl) {
+      saved.push([layoutEl, layoutEl.style.minHeight, layoutEl.style.height, '', '', ''])
+      layoutEl.style.minHeight = 'auto'
+      layoutEl.style.height = 'auto'
+    }
+    if (headerEl) {
+      saved.push([headerEl, headerEl.style.display, '', '', '', ''])
+      headerEl.style.display = 'none'
+    }
+    if (sidebarEl) {
+      saved.push([sidebarEl, sidebarEl.style.marginLeft, '', '', '', ''])
+      sidebarEl.style.marginLeft = '0'
+    }
+    if (mainEl) {
+      saved.push([mainEl, mainEl.style.padding, '', '', '', ''])
+      mainEl.style.padding = '0'
+    }
+
     window.print()
+
     setTimeout(() => {
       document.body.classList.remove('printing')
+      document.documentElement.style.overflow = ''
+      document.body.style.overflow = ''
+      // Restore saved styles
+      saved.forEach(([el, val1]) => {
+        if (el === layoutEl) {
+          el.style.minHeight = val1
+          el.style.height = ''
+        }
+        if (el === headerEl) el.style.display = val1
+        if (el === sidebarEl) el.style.marginLeft = val1
+        if (el === mainEl) el.style.padding = val1
+      })
     }, 1000)
   }
 

@@ -72,6 +72,9 @@
 /* ==================== VOUCHER PRINT STYLES ==================== */
 /* These MUST be in global CSS (not inline <style>) for reliable mobile print */
 
+/* ==================== VOUCHER PRINT STYLES ==================== */
+/* MUST be outside @layer for maximum specificity on mobile print */
+
 @media print {
   @page {
     size: A4 portrait;
@@ -93,10 +96,32 @@
     print-color-adjust: exact !important;
   }
 
-  .no-print {
+  /* === HIDE LAYOUT ELEMENTS (sidebar, header, nav) === */
+  .no-print,
+  header,
+  nav,
+  aside,
+  .fixed,
+  .sticky {
     display: none !important;
   }
 
+  /* === RESET LAYOUT WRAPPERS === */
+  .min-h-screen {
+    min-height: auto !important;
+    height: auto !important;
+  }
+
+  .lg\:ml-64 {
+    margin-left: 0 !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* === VOUCHER PAGE === */
   #voucher-page {
     padding: 0 !important;
     background: white !important;
@@ -105,6 +130,7 @@
     overflow: hidden !important;
   }
 
+  /* === SCROLL WRAPPER === */
   .voucher-scroll {
     overflow: visible !important;
     overflow-x: visible !important;
@@ -113,6 +139,7 @@
     height: auto !important;
   }
 
+  /* === VOUCHER === */
   #voucher {
     box-shadow: none !important;
     width: 210mm !important;
