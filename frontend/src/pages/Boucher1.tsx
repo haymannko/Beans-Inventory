@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { FiPrinter } from 'react-icons/fi'
 import { useWeightMasterList } from '../hooks/useWeightMaster'
 
@@ -52,19 +52,10 @@ const DEFAULT_WEIGHTS: Record<string, number> = {
   'ပဲလွန်းပြာ': 54.25,
   'ပဲလွန်းဝါ': 54.25,
   'ထောပတ်ဖြူ ကြီး/သေး': 56.25,
-  'ပဲကြီး': 55.25,
   'ပဲကြီးမျိုးစုံ / ရွှေယင်းမာ': 55.25,
   'ပဲပုတ်စေ့': 53.25,
   'ပဲရာဇာ': 61.25,
   'ပဲယဉ်း': 60,
-  'ခေတ်သစ် (ခ) ပဲဖြူလေး': 57.25,
-  'ဆီနေကြာ': 27,
-  'ပန်းနှမ်း': 45,
-  'မိုးလေးနှမ်း': 49.25,
-  'ကြက်ဆူအကြား (နီကြား/ဖြူကြား)': 36,
-  'ကြက်ဆူအနက်': 30,
-  'ကဇင်းသီး': 37.25,
-  'ကြို့စေ့': 38.25,
 }
 
 export default function Boucher() {
@@ -75,72 +66,25 @@ export default function Boucher() {
 
   const { data: weightMasterList } = useWeightMasterList()
 
-  // ---- Mobile scaling ----
-  const voucherRef = useRef<HTMLDivElement>(null)
-  const [scale, setScale] = useState(1)
-  const [naturalHeight, setNaturalHeight] = useState(0)
-
-  const recalcScale = useCallback(() => {
-    if (!voucherRef.current) return
-    const parent = voucherRef.current.parentElement
-    if (!parent) return
-    const available = parent.clientWidth
-    const natural = voucherRef.current.scrollWidth
-    const s = Math.min(1, available / natural)
-    setScale(s)
-    setNaturalHeight(voucherRef.current.scrollHeight)
-  }, [])
-
-  useEffect(() => {
-    recalcScale()
-    window.addEventListener('resize', recalcScale)
-    return () => window.removeEventListener('resize', recalcScale)
-  }, [recalcScale, weightMasterList])
-
-  // Weight lookup: DB first → DEFAULT_WEIGHTS exact → DEFAULT_WEIGHTS fuzzy → 0
+  // Fuzzy lookup: exact → contains (either direction)
   const lookupWeight = (beanType: string): number => {
     if (!beanType) return 0
-    const key = beanType.trim()
-
-    // 1. DB exact match
-    const dbExact = weightMasterList?.find((w) => w.bean_name.trim() === key)
-    if (dbExact) return Number(dbExact.weight)
-
-    // 2. DEFAULT_WEIGHTS exact match
-    if (key in DEFAULT_WEIGHTS) return DEFAULT_WEIGHTS[key]
-
-    // 3. DB fuzzy match
-    const dbFuzzy = weightMasterList?.find(
-      (w) => w.bean_name.includes(key) || key.includes(w.bean_name)
-    )
-    if (dbFuzzy) return Number(dbFuzzy.weight)
-
-    // 4. DEFAULT_WEIGHTS fuzzy match
+    if (DEFAULT_WEIGHTS[beanType]) return DEFAULT_WEIGHTS[beanType]
+    const lower = beanType.toLowerCase()
     for (const [name, weight] of Object.entries(DEFAULT_WEIGHTS)) {
-      if (name.includes(key) || key.includes(name)) return weight
+      if (name.toLowerCase().includes(lower) || lower.includes(name.toLowerCase())) return weight
     }
-
     return 0
   }
 
-  const updateRow = (
-    idx: number,
-    field: keyof Row,
-    value: number | string
-  ) => {
+  const updateRow = (idx: number, field: keyof Row, value: number | string) => {
     setRows((prev) =>
       prev.map((r, i) => {
         if (i !== idx) return r
         const updated = { ...r, [field]: value }
 
         // Formula: ထည့်ဝင်သည့်အလေးချိန် × အိတ် × ဈေးနှုန်း / အသားအလေးချိန် = သင့်ငွေ
-        const masterWeight = lookupWeight(updated.beanType)
-        if (masterWeight > 0) {
-          updated.amount =
-            (updated.weight * updated.bags * updated.rate) / masterWeight
-        } else {
-          updated.amount = 0
-        }
+        updated.amount = updated.bags * updated.weight * updated.rate / (lookupWeight(updated.beanType) || 1)
 
         return updated
       })
@@ -163,8 +107,7 @@ export default function Boucher() {
       <div
         className="no-print"
         style={{
-          width: '210mm',
-          maxWidth: '100%',
+          maxWidth: 210 * 3.78,
           margin: '0 auto 12px',
           display: 'flex',
           alignItems: 'center',
@@ -196,16 +139,6 @@ export default function Boucher() {
       </div>
 
       {/* ==================== VOUCHER ==================== */}
-      <div className="voucher-scaler" style={{ width: '100%', maxWidth: 210 * 3.78, margin: '0 auto' }}>
-        <div
-          ref={voucherRef}
-          style={{
-            width: 210 * 3.78,
-            transformOrigin: 'top left',
-            transform: scale < 1 ? `scale(${scale})` : undefined,
-            height: scale < 1 ? naturalHeight * scale : undefined,
-          }}
-        >
       <div id="voucher" style={voucherOuterStyle}>
         {/* Outer thick border */}
         <div style={outerBorderStyle}>
@@ -270,7 +203,7 @@ export default function Boucher() {
                 />
               </div>
 
-              {/* ===== BUSINESS TYPE ===== */}
+              {/* ===== RED HEADER BANNER ===== */}
               <div style={headerBannerStyle}>
                 <div
                   style={{
@@ -279,6 +212,7 @@ export default function Boucher() {
                     alignItems: 'center',
                   }}
                 >
+                  {/* ===== BUSINESS TYPE (red) ===== */}
                   <div style={{ textAlign: 'center', marginBottom: 2 }}>
                     <p
                       style={{
@@ -293,6 +227,7 @@ export default function Boucher() {
                   </div>
                 </div>
               </div>
+
 
               {/* ===== ADDRESS ===== */}
               <div style={{ textAlign: 'center', marginBottom: 2 }}>
@@ -338,6 +273,7 @@ export default function Boucher() {
                     <th style={{ ...thStyle, width: 200 }}>ကုန်အမျိုးအမည်</th>
                     <th style={{ ...thStyle, width: 80 }}>ထည့်ဝင်သည့်အလေးချိန်</th>
                     <th style={{ ...thStyle, width: 48 }}>အိတ်</th>
+                    <th style={{ ...thStyle, width: 64 }}>ပိဿာ</th>
                     <th style={{ ...thStyle, width: 100 }}>ဈေးနှုန်း</th>
                     <th style={{ ...thStyle, width: 200 }}>သင့်ငွေ(ကျပ်)</th>
                   </tr>
@@ -362,11 +298,9 @@ export default function Boucher() {
                             value={row?.beanType ?? ''}
                             onChange={(e) => updateRow(i, 'beanType', e.target.value)}
                             style={cellInputStyle}
+                            placeholder="ပဲအမျိုးအစား"
                           />
                           <datalist id={`bean-list-${i}`}>
-                            {Object.keys(DEFAULT_WEIGHTS).map((name) => (
-                              <option key={name} value={name} />
-                            ))}
                             {weightMasterList?.map((wm) => (
                               <option key={wm.id} value={wm.bean_name} />
                             ))}
@@ -427,40 +361,49 @@ export default function Boucher() {
                     >
                       {totalAmount > 0 ? totalAmount.toLocaleString(undefined, { maximumFractionDigits: 2 }) : ''}
                     </td>
+                    <td style={{ ...tdStyle, borderBottom: 'none', borderTop: `2px solid ${BORDER_COLOR}` }} />
                   </tr>
                 </tfoot>
               </table>
 
               {/* ===== FOOTER FIELDS ===== */}
               <div style={{ marginTop: 14, paddingTop: 6, fontSize: 12 }}>
+                {/* Row 1: ကားခ + လက်ခံရရှိ */}
                 <div style={footerRowStyle}>
                   <FieldLine label="ကားခ" />
                   <FieldLine label="လက်ခံရရှိ" />
                 </div>
+                {/* Row 2: ချိန်ခ + မှတ်ချက် */}
                 <div style={footerRowStyle}>
                   <FieldLine label="ချိန်ခ" />
                   <FieldLine label="မှတ်ချက်" />
                 </div>
+                {/* Row 3: ချခ + ထောက်ခံ */}
                 <div style={footerRowStyle}>
                   <FieldLine label="ချခ" />
                   <FieldLine label="ထောက်ခံ" />
                 </div>
+                {/* Row 4: ကော်မရှင်ခ + လက်မှတ် */}
                 <div style={footerRowStyle}>
                   <FieldLine label="ကော်မရှင်ခ" />
                   <FieldLine label="လက်မှတ်" />
                 </div>
+                {/* Row 5: အသုံး (left only) */}
                 <div style={footerRowStyle}>
                   <FieldLine label="အသုံး" />
                   <div style={{ flex: 1 }} />
                 </div>
+                {/* Row 6: ခုနှိမ်ငွေ (left only) */}
                 <div style={footerRowStyle}>
                   <FieldLine label="ခုနှိမ်ငွေ" />
                   <div style={{ flex: 1 }} />
                 </div>
+                {/* Totals row: စုစုပေါင်း ခုနှိမ်ငွေ (full width) */}
                 <div style={footerRowStyle}>
                   <FieldLine label="စုစုပေါင်း ခုနှိမ်ငွေ" />
                   <div style={{ flex: 1 }} />
                 </div>
+                {/* Remaining: ကျန်ငွေ (full width) */}
                 <div style={{ display: 'flex', gap: 24 }}>
                   <FieldLine label="ကျန်ငွေ" />
                   <div style={{ flex: 1 }} />
@@ -470,8 +413,6 @@ export default function Boucher() {
             </div>
           </div>
         </div>
-      </div>
-      </div>
       </div>
 
       {/* ===== PRINT STYLES ===== */}
@@ -511,14 +452,10 @@ function FieldLine({ label }: { label: string }) {
 /* ==================== STYLE OBJECTS ==================== */
 
 const voucherOuterStyle: React.CSSProperties = {
-  width: '210mm',
-  minWidth: '210mm',
-  maxWidth: '210mm',
+  maxWidth: 210 * 3.78, // A4 width in px at 96dpi
   margin: '0 auto',
   background: '#fdf0ec',
   fontFamily: '"Noto Sans Myanmar", "Pyidaungsu", "Myanmar Text", "Tharlon", serif',
-  breakInside: 'avoid',
-  pageBreakInside: 'avoid',
 }
 
 const outerBorderStyle: React.CSSProperties = {
@@ -540,7 +477,6 @@ const headerBannerStyle: React.CSSProperties = {
 
 const locationDateBarStyle: React.CSSProperties = {
   display: 'flex',
-  flexWrap: 'nowrap',
   justifyContent: 'space-between',
   alignItems: 'center',
   padding: '6px 4px',
@@ -603,9 +539,9 @@ const cellInputStyle: React.CSSProperties = {
   boxSizing: 'border-box',
 }
 
+
 const footerRowStyle: React.CSSProperties = {
   display: 'flex',
-  flexWrap: 'nowrap',
   gap: 24,
   marginBottom: 4,
 }
@@ -624,7 +560,6 @@ const printCSS = `
       padding: 0 !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
-      overflow: hidden !important;
     }
     .no-print {
       display: none !important;
@@ -633,35 +568,15 @@ const printCSS = `
       padding: 0 !important;
       background: white !important;
       min-height: auto !important;
-      overflow: hidden !important;
-    }
-    #voucher-page > div:first-child {
-      overflow: visible !important;
-      display: block !important;
-    }
-    .voucher-scaler {
-      max-width: none !important;
-      width: 210mm !important;
-      transform: none !important;
-      margin: 0 !important;
-    }
-    .voucher-scaler > div {
-      transform: none !important;
-      margin-bottom: 0 !important;
     }
     #voucher {
       box-shadow: none !important;
-      width: 210mm !important;
-      min-width: 210mm !important;
-      max-width: 210mm !important;
+      max-width: 100% !important;
+      width: 100% !important;
       margin: 0 !important;
       background: #fdf0ec !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-      break-after: avoid !important;
-      page-break-after: avoid !important;
     }
     #voucher > div {
       border: 3px solid ${RED} !important;
@@ -691,10 +606,6 @@ const printCSS = `
     th {
       background: ${RED} !important;
       color: white !important;
-    }
-    tr {
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
     }
   }
   #voucher input:focus, #voucher select:focus {
