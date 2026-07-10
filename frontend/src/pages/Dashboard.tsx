@@ -4,7 +4,6 @@ import {
   FiPackage,
   FiTruck,
   FiDollarSign,
-  FiAlertTriangle,
   FiArchive,
 } from 'react-icons/fi'
 import {
@@ -88,27 +87,6 @@ export default function Dashboard() {
           color="purple"
         />
       </div>
-
-      {/* Low Stock Alerts */}
-      {dashboard.low_stock_alerts.length > 0 && (
-        <div className="card border-l-4 border-red-500">
-          <div className="flex items-center gap-2 mb-3">
-            <FiAlertTriangle className="w-5 h-5 text-red-500" />
-            <h3 className="font-semibold text-red-700 dark:text-red-400">Low Stock Alerts</h3>
-          </div>
-          <div className="space-y-2">
-            {dashboard.low_stock_alerts.map((alert) => (
-              <div
-                key={alert.bean_type_id}
-                className="flex items-center justify-between text-sm"
-              >
-                <span>{alert.bean_type_name}</span>
-                <span className="font-medium text-red-600">{alert.total_stock_bags} bags</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
