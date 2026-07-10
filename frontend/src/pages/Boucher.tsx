@@ -317,7 +317,7 @@ export default function Boucher() {
               {/* ===== ADDRESS ===== */}
               <div style={{ textAlign: 'center', marginBottom: 2 }}>
                 <p style={{ fontSize: 10, color: '#555', margin: 0 }}>
-                  လမ်း၃၀ ၈၉*၉၀ လမ်းကြား ကျောက်ဆစ်မီးသတ်အရှေ့ဘက် ဥယျာဉ်တန်းရပ် မန္တလေးမြို
+                  လမ်း၃၀ ၈၉*၉၀ လမ်းကြား ကျောက်ဆစ်မီးသတ်အရှေ့ဘက် ဥယျာဉ်တန်းရပ် မန္တလေးမြို့
                 </p>
               </div>
 
