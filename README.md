@@ -14,7 +14,7 @@
 - **Sales** - Record sales with stock validation (auto-decrements stock)
 - **Storage** - Track warehouse storage locations
 - **Stock Adjustments** - Correct stock levels with audit trail
-- **Dashboard** - Real-time stats, charts, and low-stock alerts
+- **Dashboard** - Real-time stats and charts
 - **Reports** - Daily/Weekly/Monthly/Custom reports with Excel/PDF export
 - **Audit Trail** - Full tracking of all operations
 - **Dark Mode** - Built-in dark mode support
