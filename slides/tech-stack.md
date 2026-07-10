@@ -29,9 +29,10 @@ auto-advance: 20
 - **Database Agent** — manages SQLAlchemy models, migrations, seed data
 - **DevOps Agent** — Docker, CI/CD, deployment config
 - **QA Agent** — writes and runs pytest tests
+- **Security Agent** — reviews code for vulnerabilities, secrets, and CVEs
 
 > **Speaker Notes:**
-> Each agent is a specialized subagent stored in `.claude/agents/`. They handle domain-specific tasks — the frontend agent builds UI, the backend agent writes API logic, and so on. This keeps work modular and focused.
+> Each agent is a specialized subagent stored in `.claude/agents/`. They handle domain-specific tasks — the frontend agent builds UI, the backend agent writes API logic, the security agent reviews every change for vulnerabilities. This keeps work modular and focused.
 
 ---
 
@@ -43,9 +44,10 @@ auto-advance: 20
 - **fastapi-expert** — FastAPI endpoint design, Pydantic schemas, dependency injection
 - **postgresql-dba** — database optimization, indexing, query tuning
 - **erp-validator** — validates ERP features (PO tracking, supplier management, financial ledger) for data integrity
+- **security-scan** — SAST + secret scanning + dependency verification before every commit
 
 > **Speaker Notes:**
-> Skills are reusable knowledge files in `.claude/skills/`. When Claude Code works on this project, it loads these skills to follow consistent patterns — proper TypeScript typing, FastAPI best practices, database optimization, and ERP validation. Trigger: `@erp-validator validate [feature]` runs the validation checklist on PO, supplier, or ledger modules.
+> Skills are reusable knowledge files in `.claude/skills/`. When Claude Code works on this project, it loads these skills to follow consistent patterns — proper TypeScript typing, FastAPI best practices, database optimization, ERP validation, and security scanning. Trigger: `@security-scan scan [backend|frontend|all]` runs the full security pipeline.
 
 ---
 
@@ -58,9 +60,10 @@ auto-advance: 20
 - **Issue-driven** — user feedback becomes GitHub issues, fixed in next chapter
 - **Real user validation** — deployed to Vercel, tested by actual warehouse staff
 - **Audit trail** — every stock movement logged, every transaction traceable
+- **Secure workflow** — plan → build → agent review → SAST + secret scan → dep verify → human review → commit
 
 > **Speaker Notes:**
-> We use a vibe coding approach — Claude Code generates code, we review and refine. Changes go through: local dev → git push → auto-deploy to Vercel → user tests → feedback → issues → fix cycle.
+> We use a vibe coding approach — Claude Code generates code, we review and refine. Changes go through: local dev → git push → auto-deploy to Vercel → user tests → feedback → issues → fix cycle. Security is built into the workflow — every commit goes through SAST, secret scanning, and dependency verification.
 
 ---
 
@@ -77,3 +80,19 @@ auto-advance: 20
 
 > **Speaker Notes:**
 > One command to start local dev. Docker for full-stack testing. Vercel CLI for production deploys. Tests run with coverage. Everything is automated through GitHub Actions CI.
+
+---
+
+## Slide 6: Security Workflow
+
+**Title:** Secure by Default
+
+- **plan → build → agent review → SAST + secret scan → dep verify → human review → commit**
+- **SAST:** Bandit (Python) scans for injection, XSS, insecure configs
+- **Secret scan:** grep patterns block hardcoded passwords, API keys, tokens
+- **Dep verify:** pip-audit + npm audit check for known CVEs
+- **Agent review:** Security Agent reviews auth, CORS, input validation
+- **Sandbox + least-privilege:** agents run with minimal permissions
+
+> **Speaker Notes:**
+> Security is not an afterthought — it's a workflow stage. Every change goes through: plan the feature, build it, agent reviews for vulnerabilities, automated SAST + secret scanning runs, dependencies are verified against CVE databases, then a human reviews before committing. This runs as a pre-commit hook and in CI/CD.

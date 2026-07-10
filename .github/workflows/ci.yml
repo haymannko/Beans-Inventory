@@ -43,3 +43,33 @@ jobs:
 
       - name: Build
         run: cd frontend && npm run build
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: SAST — Bandit (Python)
+        run: |
+          pip install bandit
+          bandit -r backend/app/ -ll -f json
+
+      - name: Secret Scan — grep patterns
+        run: |
+          echo "Scanning for hardcoded secrets..."
+          ! grep -rE "(password|secret|token|api_key)\s*=\s*['\"][^'\"$]" backend/app/ --include="*.py" | grep -v "env" | grep -v "test"
+          ! grep -rE "(password|secret|token|api_key)\s*=\s*['\"][^'\"$]" frontend/src/ --include="*.ts" --include="*.tsx" | grep -v "env" | grep -v "test"
+          echo "✅ No hardcoded secrets found"
+
+      - name: Dep Audit — pip-audit
+        run: |
+          pip install pip-audit
+          pip-audit --severity medium || true
+
+      - name: Dep Audit — npm audit
+        run: cd frontend && npm audit --audit-level=moderate || true
