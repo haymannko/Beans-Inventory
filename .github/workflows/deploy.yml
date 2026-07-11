@@ -198,8 +198,23 @@ jobs:
       - name: Verify backend health
         id: verify
         run: |
-          HEALTH_URL="https://${{ secrets.RENDER_SERVICE_ID }}.onrender.com/health"
-          echo "Checking: $HEALTH_URL"
+          # Get the actual service URL from Render API
+          echo "Fetching service details from Render API..."
+          SERVICE_INFO=$(curl -s \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}")
+
+          SERVICE_URL=$(echo "$SERVICE_INFO" | jq -r '.service.serviceDetails.url // empty')
+
+          if [ -z "$SERVICE_URL" ]; then
+            echo "❌ Could not get service URL from Render API"
+            echo "$SERVICE_INFO" | jq .
+            echo "healthy=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          HEALTH_URL="${SERVICE_URL}/health"
+          echo "Health check URL: $HEALTH_URL"
 
           MAX_RETRIES=10
           RETRY_DELAY=15
