@@ -1,0 +1,305 @@
+# ── Continuous Deployment Pipeline ─────────────────────────────────────────────
+# Beans Inventory — Build, Test, Deploy
+#
+# Flow:
+#   1. Tests pass (backend pytest + frontend build)
+#   2. Build Docker image → push to GitHub Container Registry
+#   3. Deploy to Render (backend API)
+#   4. Health check verification
+#   5. Automatic rollback on failure
+#
+# Frontend is deployed separately by Vercel (no workflow needed).
+#
+# Required GitHub Secrets:
+#   RENDER_API_KEY        — Render API key (https://dashboard.render.com/settings#api-keys)
+#   RENDER_SERVICE_ID     — Render service ID (from service settings URL)
+#   DATABASE_URL          — Render PostgreSQL connection string
+#   SECRET_KEY            — JWT signing key (openssl rand -hex 32)
+#
+# DO NOT add secrets to this file. They stay in GitHub Settings → Secrets.
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: "Skip tests (emergency deploy)"
+        required: false
+        default: "false"
+        type: boolean
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false  # Never cancel an in-flight deploy
+
+permissions:
+  contents: read
+  packages: write  # Push to GHCR
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/backend
+
+jobs:
+  # ════════════════════════════════════════════════════════════════════════════
+  # STAGE 1: Tests (must pass before any deployment)
+  # ════════════════════════════════════════════════════════════════════════════
+  test-backend:
+    name: "🧪 Backend Tests"
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.skip_tests }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov httpx
+
+      - name: Run tests with coverage
+        run: cd backend && pytest --cov=app --cov-report=term tests/
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend/.coverage
+          retention-days: 7
+
+  test-frontend:
+    name: "🧪 Frontend Build"
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.skip_tests }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: cd frontend && npm ci
+
+      - name: Build
+        run: cd frontend && npm run build
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # STAGE 2: Build Docker Image
+  # ════════════════════════════════════════════════════════════════════════════
+  build:
+    name: "🐳 Build & Push Docker Image"
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
+    if: always() && (needs.test-backend.result == 'success' || needs.test-frontend.result == 'success' || inputs.skip_tests)
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+      image_digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=,format=short
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # STAGE 3: Deploy to Render
+  # ════════════════════════════════════════════════════════════════════════════
+  deploy:
+    name: "🚀 Deploy to Render"
+    runs-on: ubuntu-latest
+    needs: [build]
+    outputs:
+      deploy_url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: Trigger Render deploy
+        id: deploy
+        run: |
+          echo "Triggering Render deployment..."
+          RESPONSE=$(curl -s -X POST \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json")
+
+          echo "Response: $RESPONSE"
+
+          # Extract deploy ID
+          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
+          if [ -z "$DEPLOY_ID" ]; then
+            echo "❌ Failed to trigger deploy"
+            echo "$RESPONSE" | jq .
+            exit 1
+          fi
+
+          echo "deploy_id=$DEPLOY_ID" >> "$GITHUB_OUTPUT"
+          echo "✅ Deploy triggered: $DEPLOY_ID"
+
+          # Store deploy start time for rollback reference
+          echo "deploy_time=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # STAGE 4: Health Check (post-deploy verification)
+  # ════════════════════════════════════════════════════════════════════════════
+  health-check:
+    name: "🏥 Health Check"
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    outputs:
+      healthy: ${{ steps.verify.outputs.healthy }}
+    steps:
+      - name: Wait for deployment to stabilize
+        run: sleep 60  # Render needs time to build and start
+
+      - name: Verify backend health
+        id: verify
+        run: |
+          HEALTH_URL="https://${{ secrets.RENDER_SERVICE_ID }}.onrender.com/health"
+          echo "Checking: $HEALTH_URL"
+
+          MAX_RETRIES=10
+          RETRY_DELAY=15
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i/$MAX_RETRIES..."
+
+            HTTP_CODE=$(curl -s -o /tmp/health_response.json -w "%{http_code}" "$HEALTH_URL" 2>/dev/null || echo "000")
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✅ Health check passed (HTTP $HTTP_CODE)"
+              cat /tmp/health_response.json | jq .
+              echo "healthy=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            echo "⏳ Not ready (HTTP $HTTP_CODE), retrying in ${RETRY_DELAY}s..."
+            sleep $RETRY_DELAY
+          done
+
+          echo "❌ Health check failed after $MAX_RETRIES attempts"
+          echo "healthy=false" >> "$GITHUB_OUTPUT"
+          cat /tmp/health_response.json 2>/dev/null || echo "No response"
+          exit 1
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # STAGE 5: Rollback (only if health check fails)
+  # ════════════════════════════════════════════════════════════════════════════
+  rollback:
+    name: "🔄 Rollback"
+    runs-on: ubuntu-latest
+    needs: [health-check, deploy]
+    if: failure() && needs.health-check.result == 'failure'
+    steps:
+      - name: Trigger Render rollback
+        run: |
+          echo "⚠️ Health check failed — initiating rollback..."
+
+          # Get the previous successful deploy
+          PREV_DEPLOY=$(curl -s \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys?limit=2" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" | jq -r '.[1].id')
+
+          if [ -n "$PREV_DEPLOY" ] && [ "$PREV_DEPLOY" != "null" ]; then
+            echo "Rolling back to deploy: $PREV_DEPLOY"
+            curl -s -X POST \
+              "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
+              -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"deploy\": \"$(echo $PREV_DEPLOY)\"}"
+            echo "✅ Rollback triggered"
+          else
+            echo "❌ No previous deploy found for rollback"
+            echo "Manually rollback at: https://dashboard.render.com"
+          fi
+
+      - name: Notify on failure
+        if: always()
+        run: |
+          echo "::error::🚨 Deployment failed and was rolled back"
+          echo "Check logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # STAGE 6: Cleanup (remove old images from GHCR)
+  # ════════════════════════════════════════════════════════════════════════════
+  cleanup:
+    name: "🧹 Cleanup Old Images"
+    runs-on: ubuntu-latest
+    needs: [health-check]
+    if: success()
+    permissions:
+      packages: write
+    steps:
+      - name: Delete old container images (keep last 5)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const packageName = '${{ env.IMAGE_NAME }}';
+            const images = await github.rest.packages.getAllPackageVersionsForPackageOwnedByOrg({
+              package_type: 'container',
+              package_name: packageName,
+              org: context.repo.owner,
+            });
+
+            // Sort by created_at descending, keep only latest 5
+            const sorted = images.data
+              .filter(v => v.metadata?.container?.tags?.length > 0)
+              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            const toDelete = sorted.slice(5);
+            for (const version of toDelete) {
+              try {
+                await github.rest.packages.deletePackageVersionForOrg({
+                  package_type: 'container',
+                  package_name: packageName,
+                  org: context.repo.owner,
+                  package_version_id: version.id,
+                });
+                console.log(`Deleted: ${version.id}`);
+              } catch (e) {
+                console.log(`Skip ${version.id}: ${e.message}`);
+              }
+            }
