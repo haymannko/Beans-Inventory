@@ -1,0 +1,87 @@
+# ── Production Docker Compose ─────────────────────────────────────────────────
+# Usage: docker compose -f docker-compose.prod.yml up -d
+#
+# This file overrides docker-compose.yml for production deployments.
+# All secrets come from environment variables — NEVER hardcode them here.
+#
+# Required environment variables (set in .env or export before running):
+#   DATABASE_URL     — PostgreSQL connection string
+#   SECRET_KEY       — JWT signing key (use `openssl rand -hex 32`)
+#   CORS_ORIGINS     — JSON array of allowed origins
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: beans-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-beans_inventory}
+    # NO port mapping — only accessible via Docker network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - backend_net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: beans-backend
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+      CORS_ORIGINS: ${CORS_ORIGINS:-["https://your-domain.com"]}
+      DEBUG: "false"
+    # NO port mapping — only accessible via nginx
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - backend_net
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: beans-nginx
+    ports:
+      - "${APP_PORT:-80}:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - backend_net
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  backend_net:
+    driver: bridge

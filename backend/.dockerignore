@@ -1,0 +1,41 @@
+# ── Backend .dockerignore ─────────────────────────────────────────────────────
+# Excludes from backend Docker build
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Git
+.git
+.github
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+.venv
+venv
+.pytest_cache
+.coverage
+htmlcov
+
+# IDE
+.vscode
+.idea
+
+# Test files (not needed in production image)
+tests/
+scripts/
+
+# Docs
+*.md
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Docker
+Dockerfile*
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db

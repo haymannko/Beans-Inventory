@@ -1,0 +1,55 @@
+# ── Root .dockerignore ────────────────────────────────────────────────────────
+# Excludes from ALL Docker builds in this repo
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Git
+.git
+.gitignore
+
+# CI/CD
+.github
+.claude
+
+# Dependencies
+node_modules
+__pycache__
+*.pyc
+*.pyo
+.venv
+venv
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Test/Dev
+.pytest_cache
+.coverage
+htmlcov
+*.log
+
+# Docker files (don't self-include)
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Documentation
+*.md
+LICENSE
+
+# Env files (secrets!)
+.env
+.env.*
+!.env.example
+
+# Build artifacts
+dist
+build
+*.egg-info
+
+# OS files
+.DS_Store
+Thumbs.db
