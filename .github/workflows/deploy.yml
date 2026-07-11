@@ -42,7 +42,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/backend
+  IMAGE_NAME: ${{ github.repository_owner }}/beans-inventory/backend
 
 jobs:
   # ════════════════════════════════════════════════════════════════════════════
@@ -290,31 +290,37 @@ jobs:
     steps:
       - name: Delete old container images (keep last 5)
         uses: actions/github-script@v7
+        continue-on-error: true  # Non-critical, don't fail deploy
         with:
           script: |
             const packageName = '${{ env.IMAGE_NAME }}';
-            const images = await github.rest.packages.getAllPackageVersionsForPackageOwnedByUser({
-              package_type: 'container',
-              package_name: packageName,
-              username: context.repo.owner,
-            });
+            try {
+              const images = await github.rest.packages.getAllPackageVersionsForPackageOwnedByUser({
+                package_type: 'container',
+                package_name: packageName,
+                username: context.repo.owner,
+              });
 
-            // Sort by created_at descending, keep only latest 5
-            const sorted = images.data
-              .filter(v => v.metadata?.container?.tags?.length > 0)
-              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+              // Sort by created_at descending, keep only latest 5
+              const sorted = images.data
+                .filter(v => v.metadata?.container?.tags?.length > 0)
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-            const toDelete = sorted.slice(5);
-            for (const version of toDelete) {
-              try {
-                await github.rest.packages.deletePackageVersionForUser({
-                  package_type: 'container',
-                  package_name: packageName,
-                  username: context.repo.owner,
-                  package_version_id: version.id,
-                });
-                console.log(`Deleted: ${version.id}`);
-              } catch (e) {
-                console.log(`Skip ${version.id}: ${e.message}`);
+              const toDelete = sorted.slice(5);
+              for (const version of toDelete) {
+                try {
+                  await github.rest.packages.deletePackageVersionForUser({
+                    package_type: 'container',
+                    package_name: packageName,
+                    username: context.repo.owner,
+                    package_version_id: version.id,
+                  });
+                  console.log(`Deleted: ${version.id}`);
+                } catch (e) {
+                  console.log(`Skip ${version.id}: ${e.message}`);
+                }
               }
+              console.log(`Cleanup complete: ${toDelete.length} old images removed`);
+            } catch (e) {
+              console.log(`Package not found or no access: ${e.message}`);
             }
