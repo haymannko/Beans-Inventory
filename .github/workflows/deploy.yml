@@ -293,10 +293,10 @@ jobs:
         with:
           script: |
             const packageName = '${{ env.IMAGE_NAME }}';
-            const images = await github.rest.packages.getAllPackageVersionsForPackageOwnedByOrg({
+            const images = await github.rest.packages.getAllPackageVersionsForPackageOwnedByUser({
               package_type: 'container',
               package_name: packageName,
-              org: context.repo.owner,
+              username: context.repo.owner,
             });
 
             // Sort by created_at descending, keep only latest 5
@@ -307,10 +307,10 @@ jobs:
             const toDelete = sorted.slice(5);
             for (const version of toDelete) {
               try {
-                await github.rest.packages.deletePackageVersionForOrg({
+                await github.rest.packages.deletePackageVersionForUser({
                   package_type: 'container',
                   package_name: packageName,
-                  org: context.repo.owner,
+                  username: context.repo.owner,
                   package_version_id: version.id,
                 });
                 console.log(`Deleted: ${version.id}`);
