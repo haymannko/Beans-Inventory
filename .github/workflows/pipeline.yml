@@ -199,24 +199,18 @@ jobs:
     runs-on: ubuntu-latest
     needs: [docker-build]
     if: github.ref == 'refs/heads/main' && (success() || inputs.deploy_only)
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
-      - name: Debug Vercel secrets
-        run: |
-          echo "ORG_ID length: ${#VERCEL_ORG_ID}"
-          echo "PROJECT_ID length: ${#VERCEL_PROJECT_ID}"
-          echo "TOKEN length: ${#VERCEL_TOKEN}"
-
       - name: Deploy to Vercel
-        run: cd frontend && vercel --prod --yes --token=$VERCEL_TOKEN --project=beans-app
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: cd frontend && vercel --prod --yes --token=$VERCEL_TOKEN --project=$VERCEL_PROJECT_ID
 
   deploy-backend:
     name: "🚀 Deploy Backend"
