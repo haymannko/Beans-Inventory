@@ -6,18 +6,27 @@ Production deployment pipeline with automated CI/CD, health checks, and rollback
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        GitHub Actions                           │
+│                     GitHub Actions Pipeline                     │
 │                                                                 │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐   │
-│  │  Test    │→ │  Build   │→ │  Deploy  │→ │ Health Check │   │
-│  │ Backend  │  │  Docker  │  │ Render   │  │  /health     │   │
-│  │ Frontend │  │  → GHCR  │  │  API     │  │              │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────┬───────┘   │
-│                                                     │           │
-│                                              ┌──────▼───────┐  │
-│                                              │   Rollback   │  │
-│                                              │  (if failed) │  │
-│                                              └──────────────┘  │
+│  CI ──────────────────┐                                         │
+│  ├── 🧪 Test Backend  │                                         │
+│  └── 🧪 Test Frontend │                                         │
+│                        ▼                                         │
+│             🐳 Docker Build                                     │
+│                   │                                              │
+│         ┌─────────┴─────────┐                                   │
+│         ▼                   ▼                                   │
+│  🌐 Deploy Frontend   🚀 Deploy Backend                        │
+│  (Vercel)             (Render)                                  │
+│         │                   │                                   │
+│         └─────────┬─────────┘                                   │
+│                   ▼                                              │
+│          🏥 Health Check                                         │
+│                   │                                              │
+│         ┌─────────┴─────────┐                                   │
+│         ▼                   ▼                                   │
+│  🔄 Rollback          🧹 Cleanup                                │
+│  (if failed)          (old images)                              │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
@@ -44,19 +53,35 @@ Production deployment pipeline with automated CI/CD, health checks, and rollback
 
 ### Deployment Split
 
-| Service   | Platform   | Trigger                     | Notes                         |
-|-----------|------------|-----------------------------|-------------------------------|
-| Frontend  | Vercel     | Push to `main`              | Auto-deploys, no CI needed    |
-| Backend   | Render     | Push to `main` via `deploy.yml` | Docker image from GHCR    |
-| Database  | Render     | Managed                     | PostgreSQL 15, free tier      |
+| Service   | Platform   | Workflow            | Notes                         |
+|-----------|------------|---------------------|-------------------------------|
+| Frontend  | Vercel     | `pipeline.yml`     | Deployed via Vercel CLI       |
+| Backend   | Render     | `pipeline.yml`     | Docker image from GHCR        |
+| Database  | Render     | Managed             | PostgreSQL 15, free tier      |
+| Security  | —          | `security.yml`     | Separate scan workflow        |
 
 ---
 
-## Files Created/Modified
+## Files
 
-### `.github/workflows/deploy.yml` (NEW) — CD Pipeline
+### `.github/workflows/pipeline.yml` — Unified CI/CD Pipeline
 
-The main continuous deployment pipeline. Runs on push to `main` or manual trigger.
+Single workflow that renders as a professional job graph in GitHub Actions UI.
+
+| Job               | Stage    | Purpose                                    |
+|-------------------|----------|--------------------------------------------|
+| `test-backend`    | CI       | Run pytest with coverage                   |
+| `test-frontend`   | CI       | Type check, lint, build React app          |
+| `docker-build`    | Build    | Build Docker image → push to GHCR          |
+| `deploy-frontend` | Deploy   | Deploy to Vercel via CLI                   |
+| `deploy-backend`  | Deploy   | Trigger Render deploy via API              |
+| `health-check`    | Verify   | Poll `/health` until healthy               |
+| `rollback`        | Recovery | Revert if health check fails               |
+| `cleanup`         | Maintain | Delete old GHCR images (keep last 5)       |
+
+### `.github/workflows/security.yml` — Security Scans (unchanged)
+
+Separate workflow for gitleaks + semgrep. Runs on push/PR.
 
 | Job            | Purpose                                        | Dependencies       |
 |----------------|------------------------------------------------|--------------------|
@@ -103,12 +128,15 @@ Production override for local Docker Compose deployments:
 
 Go to **Settings → Secrets and variables → Actions** in your repo.
 
-| Secret             | Description                                     | How to get                              |
-|--------------------|------------------------------------------------|-----------------------------------------|
-| `RENDER_API_KEY`   | Render API authentication key                   | https://dashboard.render.com/settings#api-keys → Create API Key |
-| `RENDER_SERVICE_ID`| The backend service ID                          | From Render dashboard URL: `svc_xxxxx` |
-| `DATABASE_URL`     | PostgreSQL connection string                    | Render dashboard → Database → Connection Info |
-| `SECRET_KEY`       | JWT signing key (min 32 chars)                  | Run: `openssl rand -hex 32`             |
+| Secret              | Description                                     | How to get                              |
+|---------------------|------------------------------------------------|-----------------------------------------|
+| `RENDER_API_KEY`    | Render API authentication key                   | https://dashboard.render.com/settings#api-keys |
+| `RENDER_SERVICE_ID` | The backend service ID                          | From Render dashboard URL: `svc_xxxxx` |
+| `DATABASE_URL`      | PostgreSQL connection string                    | Render dashboard → Database → Connection Info |
+| `SECRET_KEY`        | JWT signing key (min 32 chars)                  | Run: `openssl rand -hex 32`             |
+| `VERCEL_TOKEN`      | Vercel deploy token                             | https://vercel.com/account/tokens       |
+| `VERCEL_ORG_ID`     | Vercel organization ID                          | From `.vercel/project.json`             |
+| `VERCEL_PROJECT_ID` | Vercel project ID                               | From `.vercel/project.json`             |
 
 > **⚠️ Never commit secrets to the repo.** GitHub Actions reads them from encrypted storage at runtime.
 
