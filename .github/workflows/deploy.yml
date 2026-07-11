@@ -204,7 +204,7 @@ jobs:
             "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}" \
             -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}")
 
-          SERVICE_URL=$(echo "$SERVICE_INFO" | jq -r '.service.serviceDetails.url // empty')
+          SERVICE_URL=$(echo "$SERVICE_INFO" | jq -r '.serviceDetails.url // empty')
 
           if [ -z "$SERVICE_URL" ]; then
             echo "❌ Could not get service URL from Render API"
