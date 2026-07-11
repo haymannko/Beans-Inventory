@@ -198,11 +198,22 @@ jobs:
           node-version: "20"
 
       - name: Deploy frontend to Vercel
+        id: vercel-deploy
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: cd frontend && npx vercel@55 --prod --yes --token=$VERCEL_TOKEN
+        continue-on-error: true  # Non-blocking: Vercel rate limits don't block pipeline
+
+      - name: Report Vercel deploy status
+        if: always()
+        run: |
+          if [ "${{ steps.vercel-deploy.outcome }}" = "failure" ]; then
+            echo "::warning::⚠️ Vercel deploy failed (likely rate limited) — deploy manually with: cd frontend && vercel --prod"
+          else
+            echo "✅ Vercel deploy succeeded"
+          fi
 
       # ── Deploy backend to Render ───────────────────────────────────────────
       - name: Trigger Render deploy
