@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # 8 hours
 
+    # Google OAuth
+    GOOGLE_CLIENT_ID: str = ""
+
     # CORS
     CORS_ORIGINS: list[str] = [
         "http://localhost:5173",

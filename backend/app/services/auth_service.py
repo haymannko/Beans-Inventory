@@ -45,6 +45,8 @@ async def authenticate_user(db: AsyncSession, username: str, password: str) -> U
     user = result.scalar_one_or_none()
     if user is None:
         return None
+    if not user.password_hash:
+        return None  # Google-only user, no password set
     if not verify_password(password, user.password_hash):
         return None
     return user
@@ -53,3 +55,94 @@ async def authenticate_user(db: AsyncSession, username: str, password: str) -> U
 async def get_user_by_id(db: AsyncSession, user_id: str) -> User | None:
     result = await db.execute(select(User).where(User.id == user_id))
     return result.scalar_one_or_none()
+
+
+async def verify_google_token(credential: str) -> dict:
+    """Verify a Google ID token and return the decoded payload."""
+    from google.oauth2 import id_token
+    from google.auth.transport import requests as google_requests
+    from app.config import settings
+
+    try:
+        client_id = settings.GOOGLE_CLIENT_ID
+        if not client_id:
+            raise ValueError("Google Client ID not configured")
+
+        idinfo = id_token.verify_oauth2_token(
+            credential,
+            google_requests.Request(),
+            client_id,
+        )
+
+        # Verify the token was issued by Google
+        valid_issuers = {"accounts.google.com", "https://accounts.google.com"}
+        if idinfo.get("iss") not in valid_issuers:
+            raise ValueError(f"Invalid issuer: {idinfo.get('iss')}")
+
+        return idinfo
+    except ValueError:
+        raise
+    except Exception as e:
+        raise ValueError(f"Failed to verify Google token: {e}")
+
+
+async def authenticate_google_user(db: AsyncSession, google_payload: dict) -> "User":
+    """Find or create a user from Google token payload."""
+    from app.models.user import User, UserRole
+    from sqlalchemy import select, func
+
+    google_id = google_payload.get("sub")
+    email = google_payload.get("email")
+    name = google_payload.get("name") or email
+    avatar_url = google_payload.get("picture")
+
+    # 1. Check if user exists by google_id
+    result = await db.execute(select(User).where(User.google_id == google_id))
+    user = result.scalar_one_or_none()
+
+    if user:
+        user.last_login = func.now()
+        if avatar_url:
+            user.avatar_url = avatar_url
+        return user
+
+    # 2. Check if user exists by email (link accounts)
+    if email:
+        result = await db.execute(select(User).where(User.email == email))
+        user = result.scalar_one_or_none()
+        if user:
+            user.google_id = google_id
+            user.auth_provider = "google"
+            user.avatar_url = avatar_url
+            user.last_login = func.now()
+            return user
+
+    # 3. Create new user
+    base_username = name.split("@")[0] if "@" in (name or "") else (name or "user")
+    base_username = base_username.replace(" ", "_").lower()[:30]
+    username = base_username
+
+    # Ensure uniqueness
+    counter = 1
+    while True:
+        result = await db.execute(select(User).where(User.username == username))
+        if result.scalar_one_or_none() is None:
+            break
+        username = f"{base_username}_{counter}"
+        counter += 1
+        if counter > 100:
+            raise ValueError("Could not generate unique username")
+
+    user = User(
+        username=username,
+        password_hash=None,
+        role=UserRole.STAFF.value,
+        email=email,
+        google_id=google_id,
+        avatar_url=avatar_url,
+        auth_provider="google",
+        last_login=func.now(),
+    )
+    db.add(user)
+    await db.flush()
+    return user

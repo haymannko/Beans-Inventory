@@ -2,6 +2,9 @@ export interface User {
   id: string
   username: string
   role: 'admin' | 'staff'
+  email?: string
+  avatar_url?: string
+  auth_provider?: string
   created_at: string
 }
 
