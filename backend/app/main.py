@@ -55,6 +55,12 @@ app.include_router(audit_logs.router)
 app.include_router(weight_master.router)
 
 
+@app.get("/", include_in_schema=False)
+async def root():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/docs")
+
+
 @app.get("/health")
 async def health_check():
     from sqlalchemy import func, select
@@ -108,10 +114,47 @@ async def startup():
 
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+
+        # Ensure all columns exist (handles schema evolution without alembic)
+        await _ensure_columns()
+
         await seed_if_empty()
         logger.info("Database tables and seed data ready")
     except Exception as e:
         logger.error(f"Database init error: {e}")
+
+
+async def _ensure_columns():
+    """Add missing columns to existing tables if needed."""
+    from app.db.engine import engine
+    from sqlalchemy import text, inspect
+
+    # Map of table -> list of (column_name, column definition)
+    migrations = {
+        "users": [
+            ("email", "VARCHAR(255)"),
+            ("google_id", "VARCHAR(50)"),
+            ("avatar_url", "VARCHAR(500)"),
+            ("auth_provider", "VARCHAR(20) DEFAULT 'local'"),
+            ("last_login", "TIMESTAMPTZ"),
+        ],
+    }
+
+    async with engine.begin() as conn:
+        def migrate(connection):
+            insp = inspect(connection)
+            for table, columns in migrations.items():
+                existing_tables = insp.get_table_names()
+                if table not in existing_tables:
+                    continue  # Will be created by create_all
+                existing_cols = {c["name"] for c in insp.get_columns(table)}
+                for col_name, col_def in columns:
+                    if col_name not in existing_cols:
+                        sql = f"ALTER TABLE {table} ADD COLUMN {col_name} {col_def}"
+                        logger.info(f"Migration: {sql}")
+                        connection.execute(text(sql))
+
+        await conn.run_sync(migrate)
 
 
 @app.on_event("shutdown")

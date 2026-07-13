@@ -42,8 +42,6 @@ class Settings(BaseSettings):
         "http://172.21.29.186:5173",
         "http://172.21.29.186:3000",
         "https://beans-app-iota.vercel.app",
-        "https://beans-app-*.vercel.app",
-        "https://*.vercel.app",
         "https://beans-inventory-api.onrender.com",
     ]
 
