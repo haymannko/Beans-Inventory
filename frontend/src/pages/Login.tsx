@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import GoogleLogin from '../components/GoogleLogin'
 import toast from 'react-hot-toast'
 import { FiPackage, FiEye, FiEyeOff } from 'react-icons/fi'
 
@@ -46,17 +47,28 @@ export default function Login() {
         </div>
 
         <div className="card">
+          {/* Google Login */}
+          <GoogleLogin />
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 my-5">
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+            <span className="text-sm text-gray-400 dark:text-gray-500 whitespace-nowrap">OR</span>
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+          </div>
+
+          {/* Email/Password Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Username
+                Email or Username
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="input-field"
-                placeholder="Enter your username"
+                placeholder="Enter your email or username"
                 required
               />
             </div>

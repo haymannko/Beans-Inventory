@@ -27,6 +27,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/beans_inventory
       SECRET_KEY: your-secret-key-change-in-production
       CORS_ORIGINS: '["http://localhost","http://localhost:80"]'
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     ports:
       - "8000:8000"
     depends_on:
