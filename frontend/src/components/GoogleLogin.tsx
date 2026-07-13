@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
 
@@ -29,6 +30,7 @@ declare global {
 export default function GoogleLogin() {
   const buttonRef = useRef<HTMLDivElement>(null)
   const { loginWithGoogle } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -48,6 +50,7 @@ export default function GoogleLogin() {
             try {
               await loginWithGoogle(response.credential)
               toast.success('Logged in with Google!')
+              navigate('/')
             } catch {
               toast.error('Google login failed')
             }
