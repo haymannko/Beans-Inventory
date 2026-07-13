@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import { useAuth } from '../contexts/AuthContext'
 import { FiMenu, FiLogOut, FiUser } from 'react-icons/fi'
+import ThemeToggle from './ThemeToggle'
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -36,6 +37,8 @@ export default function Layout() {
             <div className="flex-1" />
 
             <div className="flex items-center gap-2 sm:gap-4">
+              <ThemeToggle />
+
               <div className="flex items-center gap-1.5 sm:gap-2 text-sm">
                 <FiUser className="w-4 h-4 text-gray-500 hidden sm:block" />
                 <span className="font-medium">{user?.username}</span>
