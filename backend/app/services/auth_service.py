@@ -59,8 +59,16 @@ async def get_user_by_id(db: AsyncSession, user_id: str) -> User | None:
 
 async def verify_google_token(credential: str) -> dict:
     """Verify a Google ID token and return the decoded payload."""
-    from google.oauth2 import id_token
-    from google.auth.transport import requests as google_requests
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        from google.oauth2 import id_token
+        from google.auth.transport import requests as google_requests
+    except ImportError as e:
+        logger.error(f"google-auth library not installed: {e}")
+        raise ValueError("Google authentication is not configured on the server")
+
     from app.config import settings
 
     try:
@@ -83,6 +91,7 @@ async def verify_google_token(credential: str) -> dict:
     except ValueError:
         raise
     except Exception as e:
+        logger.error(f"Google token verification failed: {e}")
         raise ValueError(f"Failed to verify Google token: {e}")
 
 

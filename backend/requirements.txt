@@ -15,3 +15,4 @@ reportlab>=4.2.0
 python-dateutil>=2.9.0
 weasyprint>=60.0
 google-auth>=2.29.0
+requests>=2.31.0
