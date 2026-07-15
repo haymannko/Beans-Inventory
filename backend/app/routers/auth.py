@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.deps import get_current_user
 from app.models.user import User
-from app.schemas.auth import ChangePasswordRequest, GoogleLoginRequest, LoginRequest, Token
+from app.schemas.auth import ChangePasswordRequest, GoogleLoginRequest, LoginRequest, SetPasswordRequest, Token
 from app.services.auth_service import (
     authenticate_google_user,
     authenticate_user,
@@ -102,6 +102,39 @@ async def change_password(
     await db.flush()
 
     return {"message": "Password changed successfully"}
+
+
+@router.post("/set-password")
+async def set_password(
+    request: SetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Set a password for a Google-only user so they can also login with email/password."""
+    from sqlalchemy import select as sa_select
+    from app.models.user import User as UserModel
+
+    result = await db.execute(
+        sa_select(UserModel).where(UserModel.email == request.email)
+    )
+    user = result.scalar_one_or_none()
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No account found with this email",
+        )
+
+    if user.password_hash:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This account already has a password. Use change-password instead.",
+        )
+
+    user.password_hash = hash_password(request.password)
+    db.add(user)
+    await db.flush()
+
+    return {"message": "Password set successfully. You can now login with email and password."}
 
 
 @router.get("/me")

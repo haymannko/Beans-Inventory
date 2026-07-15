@@ -24,3 +24,8 @@ class ChangePasswordRequest(BaseModel):
 
 class GoogleLoginRequest(BaseModel):
     credential: str
+
+
+class SetPasswordRequest(BaseModel):
+    email: str
+    password: str
