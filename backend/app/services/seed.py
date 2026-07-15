@@ -99,6 +99,21 @@ USERS = [
 ]
 
 
+async def ensure_google_users_have_passwords():
+    """Set a default password for Google-only users so they can also login with email/password."""
+    async with async_session_factory() as session:
+        result = await session.execute(
+            select(User).where(User.auth_provider == "google", User.password_hash.is_(None))
+        )
+        google_users = result.scalars().all()
+        for user in google_users:
+            user.password_hash = hash_password("admin123")
+            session.add(user)
+            logger.info(f"Set default password for Google user: {user.email}")
+        if google_users:
+            await session.commit()
+
+
 async def seed_if_empty():
     """Seed default users and bean types if the database is empty."""
     async with async_session_factory() as session:

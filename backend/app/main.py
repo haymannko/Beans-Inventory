@@ -110,7 +110,7 @@ async def startup():
     try:
         from app.db.engine import engine
         from app.models import Base
-        from app.services.seed import seed_if_empty
+        from app.services.seed import seed_if_empty, ensure_google_users_have_passwords
 
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
@@ -119,6 +119,7 @@ async def startup():
         await _ensure_columns()
 
         await seed_if_empty()
+        await ensure_google_users_have_passwords()
         logger.info("Database tables and seed data ready")
     except Exception as e:
         logger.error(f"Database init error: {e}")
