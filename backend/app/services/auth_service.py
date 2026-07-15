@@ -41,7 +41,9 @@ def decode_token(token: str) -> TokenData | None:
 
 
 async def authenticate_user(db: AsyncSession, username: str, password: str) -> User | None:
-    result = await db.execute(select(User).where(User.username == username))
+    result = await db.execute(
+        select(User).where((User.username == username) | (User.email == username))
+    )
     user = result.scalar_one_or_none()
     if user is None:
         return None
