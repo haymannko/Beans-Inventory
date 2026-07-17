@@ -46,6 +46,7 @@ export default function GoogleLogin() {
 
         window.google.accounts.id.initialize({
           client_id: clientId,
+          auto_select: false,
           callback: async (response) => {
             try {
               await loginWithGoogle(response.credential)
