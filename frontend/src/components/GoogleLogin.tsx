@@ -8,10 +8,7 @@ declare global {
     google?: {
       accounts?: {
         id?: {
-          initialize: (config: {
-            client_id: string
-            callback: (response: { credential: string }) => void
-          }) => void
+          initialize: (config: Record<string, unknown>) => void
           renderButton: (
             parent: HTMLElement,
             options: {
@@ -21,6 +18,7 @@ declare global {
               text?: string
             }
           ) => void
+          disableAutoSelect: () => void
         }
       }
     }
@@ -47,7 +45,7 @@ export default function GoogleLogin() {
         window.google.accounts.id.initialize({
           client_id: clientId,
           auto_select: false,
-          callback: async (response) => {
+          callback: async (response: { credential: string }) => {
             try {
               await loginWithGoogle(response.credential)
               toast.success('Logged in with Google!')
