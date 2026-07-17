@@ -4,6 +4,10 @@
   "installCommand": "cd frontend && npm install",
   "rewrites": [
     {
+      "source": "/api/auth/google",
+      "destination": "/api/index.py"
+    },
+    {
       "source": "/api/:match*",
       "destination": "https://beans-inventory-api.onrender.com/api/:match*"
     },
