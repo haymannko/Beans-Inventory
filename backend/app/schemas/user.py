@@ -19,6 +19,9 @@ class UserResponse(BaseModel):
     id: uuid.UUID
     username: str
     role: str
+    email: str | None = None
+    auth_provider: str | None = None
+    has_password: bool = False
     created_at: datetime
 
     model_config = {"from_attributes": True}

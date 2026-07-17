@@ -21,7 +21,19 @@ async def list_users(
 ):
     """List all users (admin only)."""
     result = await db.execute(select(User).order_by(User.created_at.desc()))
-    return result.scalars().all()
+    users = result.scalars().all()
+    return [
+        UserResponse(
+            id=u.id,
+            username=u.username,
+            role=u.role,
+            email=getattr(u, "email", None),
+            auth_provider=getattr(u, "auth_provider", "local"),
+            has_password=bool(u.password_hash),
+            created_at=u.created_at,
+        )
+        for u in users
+    ]
 
 
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
