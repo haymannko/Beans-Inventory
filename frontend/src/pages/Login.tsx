@@ -1,36 +1,17 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
-import { FiPackage, FiEye, FiEyeOff } from 'react-icons/fi'
+import { FiPackage } from 'react-icons/fi'
 import GoogleLogin from '../components/GoogleLogin'
 
 export default function Login() {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const { login } = useAuth()
   const navigate = useNavigate()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
-    try {
-      await login({ username, password })
-      toast.success('Login successful!')
-      navigate('/')
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error && 'response' in error
-          ? (error as { response?: { data?: { detail?: string } } }).response?.data?.detail ||
-            'Login failed'
-          : 'Login failed'
-      toast.error(message)
-    } finally {
-      setIsLoading(false)
-    }
+  // After Google login, redirect to home
+  const handleLoginSuccess = () => {
+    toast.success('Login successful!')
+    navigate('/')
   }
 
   return (
@@ -47,70 +28,11 @@ export default function Login() {
         </div>
 
         <div className="card">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Email or Username
-              </label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="input-field"
-                placeholder="Enter your email or username"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input-field pr-10"
-                  placeholder="Enter your password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-gray-700"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn-primary w-full flex items-center justify-center gap-2 py-3"
-            >
-              {isLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-              ) : (
-                'Sign In'
-              )}
-            </button>
-          </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-gray-600" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">Or continue with</span>
-              </div>
-            </div>
-            <div className="mt-4">
-              <GoogleLogin />
-            </div>
+          <div className="text-center mb-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Use your Google account to sign in
+            </p>
+            <GoogleLogin />
           </div>
         </div>
       </div>
