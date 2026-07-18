@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { FiPackage, FiUser, FiMail, FiLock } from 'react-icons/fi'
+import { FiPackage, FiMail, FiLock } from 'react-icons/fi'
 import GoogleLogin from '../components/GoogleLogin'
 
 export default function Register() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
-  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -25,6 +24,9 @@ export default function Register() {
       toast.error('Password must be at least 6 characters')
       return
     }
+
+    // Auto-generate username from email
+    const username = email.split('@')[0].replace(/[^a-z0-9]/gi, '').toLowerCase()
 
     setIsLoading(true)
     try {
@@ -76,27 +78,9 @@ export default function Register() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input pl-10"
+                  className="input-field pl-10"
                   placeholder="you@example.com"
                   required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Username
-              </label>
-              <div className="relative">
-                <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="input pl-10"
-                  placeholder="Choose a username"
-                  required
-                  minLength={3}
                 />
               </div>
             </div>
@@ -111,7 +95,7 @@ export default function Register() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input pl-10 pr-10"
+                  className="input-field pl-10 pr-10"
                   placeholder="At least 6 characters"
                   required
                   minLength={6}
@@ -145,7 +129,7 @@ export default function Register() {
                   type={showPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="input pl-10"
+                  className="input-field pl-10"
                   placeholder="Confirm your password"
                   required
                   minLength={6}

@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
-import { FiPackage, FiUser, FiLock } from 'react-icons/fi'
+import { FiPackage, FiMail, FiLock } from 'react-icons/fi'
 import GoogleLogin from '../components/GoogleLogin'
 
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -17,11 +17,11 @@ export default function Login() {
     e.preventDefault()
     setIsLoading(true)
     try {
-      await login({ username, password })
+      await login({ username: email, password })
       toast.success('Login successful!')
       navigate('/')
     } catch {
-      toast.error('Invalid username or password')
+      toast.error('Invalid email or password')
     } finally {
       setIsLoading(false)
     }
@@ -44,16 +44,16 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Email or Username
+                Email
               </label>
               <div className="relative">
-                <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="input pl-10"
-                  placeholder="Enter your email or username"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input-field pl-10"
+                  placeholder="Enter your email"
                   required
                 />
               </div>
@@ -69,7 +69,7 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input pl-10 pr-10"
+                  className="input-field pl-10 pr-10"
                   placeholder="Enter your password"
                   required
                 />
