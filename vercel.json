@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.py"
+      "destination": "https://beans-inventory-api.onrender.com/api/$1"
     },
     {
       "source": "/(.*)",

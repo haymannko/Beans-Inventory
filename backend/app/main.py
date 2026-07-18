@@ -105,7 +105,7 @@ async def run_migrations():
 
 @app.on_event("startup")
 async def startup():
-    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
+    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION} with auto-register")
     # Auto-create tables and seed data on first run
     try:
         from app.db.engine import engine
