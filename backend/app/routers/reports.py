@@ -14,7 +14,6 @@ from app.services.report_service import generate_report
 import io
 import os
 from openpyxl import Workbook
-from weasyprint import HTML
 
 router = APIRouter(prefix="/api/reports", tags=["Reports"])
 
@@ -225,6 +224,7 @@ async def export_report_pdf(
     """
 
     output = io.BytesIO()
+    from weasyprint import HTML
     HTML(string=html_content, base_url=os.path.dirname(font_path)).write_pdf(output)
     output.seek(0)
 
