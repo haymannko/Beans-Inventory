@@ -11,7 +11,8 @@ class BeanRecordCreate(BaseModel):
     customer_name: str = Field(..., min_length=1, max_length=200)
     bags: int = Field(..., ge=0)
     viss: float = Field(..., ge=0)
-    price: float = Field(..., gt=0)
+    price: float = Field(0, ge=0)
+    value: float | None = None
 
 
 class BeanRecordUpdate(BaseModel):

@@ -25,6 +25,7 @@ interface EditableRow {
   bags: number
   viss: number
   price: number
+  value: number
 }
 
 function createEmptyRow(beanTypeId: string, date: string): EditableRow {
@@ -36,6 +37,7 @@ function createEmptyRow(beanTypeId: string, date: string): EditableRow {
     bags: 0,
     viss: 0,
     price: 0,
+    value: 0,
   }
 }
 
@@ -96,6 +98,7 @@ export default function BeanRecords() {
         bags: row.bags,
         viss: row.viss,
         price: row.price,
+        value: row.price > 0 ? undefined : row.value,
       })
       toast.success('Record saved')
       setEditingRows((prev) => prev.filter((r) => r.tempId !== row.tempId))
@@ -314,8 +317,20 @@ export default function BeanRecords() {
                       min="0"
                     />
                   </td>
-                  <td className="table-cell text-right text-sm text-gray-400 italic">
-                    Auto
+                  <td className="table-cell px-1">
+                    {row.price > 0 ? (
+                      <span className="text-sm text-gray-400 italic px-2">Auto</span>
+                    ) : (
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={row.value || ''}
+                        onChange={(e) => updateNewRow(row.tempId, 'value', Number(e.target.value))}
+                        className="w-full bg-transparent border border-blue-300 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        min="0"
+                        placeholder="Manual"
+                      />
+                    )}
                   </td>
                   <td className="table-cell text-right">
                     <div className="flex items-center justify-end gap-1">

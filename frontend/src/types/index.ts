@@ -263,6 +263,7 @@ export interface CreateBeanRecordRequest {
   bags: number
   viss: number
   price: number
+  value?: number
 }
 
 export interface UpdateBeanRecordRequest {

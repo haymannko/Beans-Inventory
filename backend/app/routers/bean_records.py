@@ -160,8 +160,13 @@ async def create_bean_record(
     # Fetch bean weight from Weight Master
     bean_weight = await _get_bean_weight(db, bean_type_id_str)
 
-    # Auto-calculate value
-    value = calculate_value(bean_weight, request.bags, request.viss, request.price)
+    # Auto-calculate value if price is provided, otherwise use manual value
+    if request.price > 0:
+        value = calculate_value(bean_weight, request.bags, request.viss, request.price)
+    elif request.value is not None:
+        value = request.value
+    else:
+        value = 0.0
 
     record = BeanRecord(
         bean_type_id=bean_type_id_str,
