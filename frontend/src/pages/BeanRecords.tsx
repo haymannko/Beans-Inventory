@@ -48,8 +48,10 @@ function calculateValue(beanWeight: number, bags: number, viss: number, price: n
 }
 
 export default function BeanRecords() {
-  // Active bean type tab
-  const [activeBeanType, setActiveBeanType] = useState('')
+  // Active bean type tab - persisted to localStorage
+  const [activeBeanType, setActiveBeanType] = useState(() => {
+    return localStorage.getItem('beanRecords_activeTab') || ''
+  })
 
   // Shared defaults for new rows
   const [defaultDate, setDefaultDate] = useState(new Date().toISOString().split('T')[0])
@@ -59,20 +61,26 @@ export default function BeanRecords() {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
 
-  // Editable rows (unsaved new rows) - persisted to localStorage
+  // Editable rows (unsaved new rows) - persisted to localStorage per bean type
   const [editingRows, setEditingRows] = useState<EditableRow[]>(() => {
     try {
-      const saved = localStorage.getItem('beanRecords_editingRows')
+      const activeTab = localStorage.getItem('beanRecords_activeTab') || ''
+      const saved = localStorage.getItem(`beanRecords_editingRows_${activeTab}`)
       return saved ? JSON.parse(saved) : []
     } catch {
       return []
     }
   })
 
-  // Save editing rows to localStorage whenever they change
+  // Persist active tab to localStorage
   useEffect(() => {
-    localStorage.setItem('beanRecords_editingRows', JSON.stringify(editingRows))
-  }, [editingRows])
+    localStorage.setItem('beanRecords_activeTab', activeBeanType)
+  }, [activeBeanType])
+
+  // Save editing rows to localStorage whenever they change (per bean type)
+  useEffect(() => {
+    localStorage.setItem(`beanRecords_editingRows_${activeBeanType}`, JSON.stringify(editingRows))
+  }, [editingRows, activeBeanType])
 
   // Queries
   const { data: weightMasterList } = useWeightMasterList()
@@ -87,15 +95,26 @@ export default function BeanRecords() {
   const createMutation = useCreateBeanRecord()
   const deleteMutation = useDeleteBeanRecord()
 
+  const switchTab = (newTab: string) => {
+    // Save current rows before switching
+    localStorage.setItem(`beanRecords_editingRows_${activeBeanType}`, JSON.stringify(editingRows))
+    // Load rows for the new tab
+    try {
+      const saved = localStorage.getItem(`beanRecords_editingRows_${newTab}`)
+      setEditingRows(saved ? JSON.parse(saved) : [])
+    } catch {
+      setEditingRows([])
+    }
+    setActiveBeanType(newTab)
+  }
+
   const addNewRow = () => {
     const row = createEmptyRow(activeBeanType, defaultDate)
     setEditingRows((prev) => [...prev, row])
   }
 
   const removeNewRow = (tempId: string) => {
-    const remaining = editingRows.filter((r) => r.tempId !== tempId)
-    setEditingRows(remaining)
-    localStorage.setItem('beanRecords_editingRows', JSON.stringify(remaining))
+    setEditingRows((prev) => prev.filter((r) => r.tempId !== tempId))
   }
 
   const updateNewRow = (tempId: string, field: keyof EditableRow, value: string | number) => {
@@ -124,9 +143,7 @@ export default function BeanRecords() {
         value: row.price > 0 ? undefined : row.value,
       })
       toast.success('Record saved')
-      const remaining = editingRows.filter((r) => r.tempId !== row.tempId)
-      setEditingRows(remaining)
-      localStorage.setItem('beanRecords_editingRows', JSON.stringify(remaining))
+      setEditingRows((prev) => prev.filter((r) => r.tempId !== row.tempId))
     } catch {
       toast.error('Failed to save record')
     }
@@ -197,7 +214,7 @@ export default function BeanRecords() {
       <div className="card p-2 mb-4">
         <div className="flex items-center gap-2 overflow-x-auto">
           <button
-            onClick={() => setActiveBeanType('')}
+            onClick={() => switchTab('')}
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
               activeBeanType === ''
                 ? 'bg-primary-600 text-white'
@@ -209,7 +226,7 @@ export default function BeanRecords() {
           {weightMasterList?.map((wm) => (
             <button
               key={wm.id}
-              onClick={() => setActiveBeanType(wm.id)}
+              onClick={() => switchTab(wm.id)}
               className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                 activeBeanType === wm.id
                   ? 'bg-primary-600 text-white'
