@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   FiPlus,
   FiTrash2,
@@ -41,9 +41,17 @@ function createEmptyRow(beanTypeId: string, date: string): EditableRow {
   }
 }
 
+// Same formula as backend: ((bean_weight / 2) * bags + viss) * price / bean_weight
+function calculateValue(beanWeight: number, bags: number, viss: number, price: number): number {
+  if (beanWeight <= 0 || price <= 0) return 0
+  return ((beanWeight / 2) * bags + viss) * price / beanWeight
+}
+
 export default function BeanRecords() {
+  // Active bean type tab
+  const [activeBeanType, setActiveBeanType] = useState('')
+
   // Shared defaults for new rows
-  const [defaultBeanType, setDefaultBeanType] = useState('')
   const [defaultDate, setDefaultDate] = useState(new Date().toISOString().split('T')[0])
 
   // Filters
@@ -51,12 +59,25 @@ export default function BeanRecords() {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
 
-  // Editable rows (unsaved new rows)
-  const [editingRows, setEditingRows] = useState<EditableRow[]>([])
+  // Editable rows (unsaved new rows) - persisted to localStorage
+  const [editingRows, setEditingRows] = useState<EditableRow[]>(() => {
+    try {
+      const saved = localStorage.getItem('beanRecords_editingRows')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
+
+  // Save editing rows to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('beanRecords_editingRows', JSON.stringify(editingRows))
+  }, [editingRows])
 
   // Queries
   const { data: weightMasterList } = useWeightMasterList()
   const { data: records, isLoading } = useBeanRecords({
+    bean_type_id: activeBeanType || undefined,
     customer: searchCustomer || undefined,
     start_date: startDate || undefined,
     end_date: endDate || undefined,
@@ -67,12 +88,14 @@ export default function BeanRecords() {
   const deleteMutation = useDeleteBeanRecord()
 
   const addNewRow = () => {
-    const row = createEmptyRow(defaultBeanType, defaultDate)
+    const row = createEmptyRow(activeBeanType, defaultDate)
     setEditingRows((prev) => [...prev, row])
   }
 
   const removeNewRow = (tempId: string) => {
-    setEditingRows((prev) => prev.filter((r) => r.tempId !== tempId))
+    const remaining = editingRows.filter((r) => r.tempId !== tempId)
+    setEditingRows(remaining)
+    localStorage.setItem('beanRecords_editingRows', JSON.stringify(remaining))
   }
 
   const updateNewRow = (tempId: string, field: keyof EditableRow, value: string | number) => {
@@ -101,7 +124,9 @@ export default function BeanRecords() {
         value: row.price > 0 ? undefined : row.value,
       })
       toast.success('Record saved')
-      setEditingRows((prev) => prev.filter((r) => r.tempId !== row.tempId))
+      const remaining = editingRows.filter((r) => r.tempId !== row.tempId)
+      setEditingRows(remaining)
+      localStorage.setItem('beanRecords_editingRows', JSON.stringify(remaining))
     } catch {
       toast.error('Failed to save record')
     }
@@ -168,24 +193,38 @@ export default function BeanRecords() {
         </div>
       </div>
 
-      {/* Default values for new rows */}
+      {/* Bean Type Tabs */}
+      <div className="card p-2 mb-4">
+        <div className="flex items-center gap-2 overflow-x-auto">
+          <button
+            onClick={() => setActiveBeanType('')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+              activeBeanType === ''
+                ? 'bg-primary-600 text-white'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            Choose Bean Type
+          </button>
+          {weightMasterList?.map((wm) => (
+            <button
+              key={wm.id}
+              onClick={() => setActiveBeanType(wm.id)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                activeBeanType === wm.id
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              {wm.bean_name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Filters */}
       <div className="card p-4 mb-4">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Default Bean Type (for new rows)
-            </label>
-            <select
-              value={defaultBeanType}
-              onChange={(e) => setDefaultBeanType(e.target.value)}
-              className="input-field"
-            >
-              <option value="">Select bean type</option>
-              {weightMasterList?.map((wm) => (
-                <option key={wm.id} value={wm.id}>{wm.bean_name}</option>
-              ))}
-            </select>
-          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Default Date (for new rows)
@@ -212,29 +251,29 @@ export default function BeanRecords() {
               />
             </div>
           </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Start Date
-            </label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="input-field"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              End Date
-            </label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="input-field"
-            />
+          <div className="flex items-end gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Start Date
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="input-field"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                End Date
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="input-field"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -318,9 +357,15 @@ export default function BeanRecords() {
                     />
                   </td>
                   <td className="table-cell px-1">
-                    {row.price > 0 ? (
-                      <span className="text-sm text-gray-400 italic px-2">Auto</span>
-                    ) : (
+                    {row.price > 0 ? (() => {
+                      const wm = weightMasterList?.find(w => w.id === row.bean_type_id)
+                      const computed = wm ? calculateValue(wm.weight, row.bags, row.viss, row.price) : 0
+                      return (
+                        <span className="text-sm font-medium text-green-600 dark:text-green-400 px-2">
+                          {computed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      )
+                    })() : (
                       <input
                         type="number"
                         step="0.01"
