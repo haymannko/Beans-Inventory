@@ -21,6 +21,30 @@ from app.services.audit_service import create_audit_log
 router = APIRouter(prefix="/api/bean-records", tags=["Bean Records"])
 logger = logging.getLogger(__name__)
 
+_table_ensured = False
+
+
+async def _ensure_table(db: AsyncSession):
+    """Auto-create bean_records table if it doesn't exist."""
+    global _table_ensured
+    if _table_ensured:
+        return
+    try:
+        from sqlalchemy import text
+        result = await db.execute(
+            text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'bean_records')")
+        )
+        if not result.scalar():
+            logger.warning("bean_records table missing — creating it now")
+            from app.db.engine import engine
+            from app.models import Base
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            logger.info("bean_records table created successfully")
+        _table_ensured = True
+    except Exception as e:
+        logger.error(f"Failed to ensure bean_records table: {e}")
+
 
 def calculate_value(bean_weight: float, bags: int, viss: float, price: float) -> float:
     """
@@ -84,6 +108,7 @@ async def list_bean_records(
     _user: User = Depends(get_current_user),
 ):
     """List bean records with optional filters."""
+    await _ensure_table(db)
     query = select(BeanRecord).order_by(BeanRecord.date.desc(), BeanRecord.created_at.desc())
 
     if bean_type_id:
