@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.deps import get_current_admin_user, get_current_user
-from app.models.user import User
-from app.schemas.auth import ChangePasswordRequest, GoogleLoginRequest, LoginRequest, SetPasswordRequest, Token
+from app.models.user import User, UserRole
+from app.schemas.auth import ChangePasswordRequest, GoogleLoginRequest, LoginRequest, RegisterRequest, SetPasswordRequest, Token
 from app.services.auth_service import (
     authenticate_google_user,
     authenticate_user,
@@ -29,6 +29,49 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",
         )
+
+    access_token = create_access_token(
+        data={"sub": str(user.id), "username": user.username, "role": user.role}
+    )
+    return JSONResponse(
+        content={"access_token": access_token, "token_type": "bearer"},
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
+
+
+@router.post("/register", response_model=Token)
+async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db)):
+    """Register a new user with email, username, and password."""
+    # Check if email already exists
+    result = await db.execute(select(User).where(User.email == request.email))
+    if result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="An account with this email already exists",
+        )
+
+    # Check if username already exists
+    result = await db.execute(select(User).where(User.username == request.username))
+    if result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This username is already taken",
+        )
+
+    # Create new user
+    user = User(
+        username=request.username,
+        email=request.email,
+        password_hash=hash_password(request.password),
+        role=UserRole.STAFF.value,
+        auth_provider="local",
+    )
+    db.add(user)
+    await db.flush()
 
     access_token = create_access_token(
         data={"sub": str(user.id), "username": user.username, "role": user.role}

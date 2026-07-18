@@ -1,27 +1,51 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
-import { FiPackage, FiUser, FiLock } from 'react-icons/fi'
+import { FiPackage, FiUser, FiMail, FiLock } from 'react-icons/fi'
 import GoogleLogin from '../components/GoogleLogin'
 
-export default function Login() {
-  const { login } = useAuth()
+export default function Register() {
   const navigate = useNavigate()
+  const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match')
+      return
+    }
+
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters')
+      return
+    }
+
     setIsLoading(true)
     try {
-      await login({ username, password })
-      toast.success('Login successful!')
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, username, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Registration failed')
+      }
+
+      localStorage.setItem('token', data.access_token)
+      toast.success('Account created successfully!')
       navigate('/')
-    } catch {
-      toast.error('Invalid username or password')
+      window.location.reload()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Registration failed')
     } finally {
       setIsLoading(false)
     }
@@ -36,7 +60,7 @@ export default function Login() {
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Beans Inventory</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Sign in to manage your inventory
+            Create an account to get started
           </p>
         </div>
 
@@ -44,7 +68,24 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Email or Username
+                Email
+              </label>
+              <div className="relative">
+                <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input pl-10"
+                  placeholder="you@example.com"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Username
               </label>
               <div className="relative">
                 <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -53,8 +94,9 @@ export default function Login() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="input pl-10"
-                  placeholder="Enter your email or username"
+                  placeholder="Choose a username"
                   required
+                  minLength={3}
                 />
               </div>
             </div>
@@ -70,8 +112,9 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="input pl-10 pr-10"
-                  placeholder="Enter your password"
+                  placeholder="At least 6 characters"
                   required
+                  minLength={6}
                 />
                 <button
                   type="button"
@@ -92,12 +135,30 @@ export default function Login() {
               </div>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="input pl-10"
+                  placeholder="Confirm your password"
+                  required
+                  minLength={6}
+                />
+              </div>
+            </div>
+
             <button
               type="submit"
               disabled={isLoading}
               className="w-full btn btn-primary py-2.5"
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
 
@@ -113,9 +174,9 @@ export default function Login() {
           <GoogleLogin />
 
           <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-primary-600 hover:text-primary-500 font-medium">
-              Create one
+            Already have an account?{' '}
+            <Link to="/login" className="text-primary-600 hover:text-primary-500 font-medium">
+              Sign in
             </Link>
           </p>
         </div>
