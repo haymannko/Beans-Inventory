@@ -10,7 +10,7 @@ import {
 } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import Modal from '../components/Modal'
-import { useBeanTypes } from '../hooks/useBeanTypes'
+import { useWeightMasterList } from '../hooks/useWeightMaster'
 import {
   useBeanRecords,
   useCreateBeanRecord,
@@ -41,7 +41,7 @@ export default function BeanRecords() {
   })
 
   // Queries
-  const { data: beanTypes } = useBeanTypes()
+  const { data: weightMasterList } = useWeightMasterList()
   const { data: records, isLoading } = useBeanRecords({
     bean_type_id: selectedBeanType || undefined,
     customer: searchCustomer || undefined,
@@ -169,9 +169,9 @@ export default function BeanRecords() {
           required
         >
           <option value="">Select bean type</option>
-          {beanTypes?.map((bt) => (
-            <option key={bt.id} value={bt.id}>
-              {bt.name}
+          {weightMasterList?.map((wm) => (
+            <option key={wm.id} value={wm.id}>
+              {wm.bean_name}
             </option>
           ))}
         </select>
@@ -298,9 +298,9 @@ export default function BeanRecords() {
               className="input-field"
             >
               <option value="">All bean types</option>
-              {beanTypes?.map((bt) => (
-                <option key={bt.id} value={bt.id}>
-                  {bt.name}
+              {weightMasterList?.map((wm) => (
+                <option key={wm.id} value={wm.id}>
+                  {wm.bean_name}
                 </option>
               ))}
             </select>
