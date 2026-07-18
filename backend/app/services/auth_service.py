@@ -45,10 +45,42 @@ async def authenticate_user(db: AsyncSession, username: str, password: str) -> U
         select(User).where((User.username == username) | (User.email == username))
     )
     user = result.scalar_one_or_none()
+
     if user is None:
-        return None
+        # Auto-create account: first login with this email/username
+        is_email = "@" in username
+        base_name = username.split("@")[0] if is_email else username
+        uname = base_name.replace(" ", "_").lower()[:30]
+
+        # Ensure unique username
+        counter = 1
+        while True:
+            check = await db.execute(select(User).where(User.username == uname))
+            if check.scalar_one_or_none() is None:
+                break
+            uname = f"{base_name}_{counter}"
+            counter += 1
+            if counter > 100:
+                return None
+
+        user = User(
+            username=uname,
+            email=username if is_email else None,
+            password_hash=hash_password(password),
+            role=UserRole.STAFF.value,
+            auth_provider="local",
+        )
+        db.add(user)
+        await db.flush()
+        return user
+
     if not user.password_hash:
-        return None  # Google-only user, no password set
+        # Google-only user — set password on first email login
+        user.password_hash = hash_password(password)
+        db.add(user)
+        await db.flush()
+        return user
+
     if not verify_password(password, user.password_hash):
         return None
     return user
