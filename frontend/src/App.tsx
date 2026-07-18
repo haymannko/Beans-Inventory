@@ -15,6 +15,7 @@ import Reports from './pages/Reports'
 import Users from './pages/Users'
 import Settings from './pages/Settings'
 import Boucher from './pages/Boucher'
+import BeanRecords from './pages/BeanRecords'
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="bean-types" element={<BeanTypes />} />
           <Route path="weight-master" element={<WeightMaster />} />
+          <Route path="bean-records" element={<BeanRecords />} />
           <Route path="arrivals" element={<Arrivals />} />
           <Route path="sales" element={<Sales />} />
           <Route path="storage" element={<Storages />} />

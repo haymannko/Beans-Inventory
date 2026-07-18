@@ -7,6 +7,7 @@ from app.models.storage import Storage
 from app.models.stock_adjustment import StockAdjustment
 from app.models.audit_log import AuditLog
 from app.models.weight_master import WeightMaster
+from app.models.bean_record import BeanRecord
 
 __all__ = [
     "Base",
@@ -18,4 +19,5 @@ __all__ = [
     "StockAdjustment",
     "AuditLog",
     "WeightMaster",
+    "BeanRecord",
 ]

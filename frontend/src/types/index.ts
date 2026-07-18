@@ -240,3 +240,36 @@ export interface UpdateAdjustmentRequest {
   reason?: string
   adjustment_date?: string
 }
+
+export interface BeanRecord {
+  id: string
+  bean_type_id: string
+  bean_type_name?: string
+  date: string
+  customer_name: string
+  bags: number
+  viss: number
+  price: number
+  value: number
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateBeanRecordRequest {
+  bean_type_id: string
+  date: string
+  customer_name: string
+  bags: number
+  viss: number
+  price: number
+}
+
+export interface UpdateBeanRecordRequest {
+  bean_type_id?: string
+  date?: string
+  customer_name?: string
+  bags?: number
+  viss?: number
+  price?: number
+}
