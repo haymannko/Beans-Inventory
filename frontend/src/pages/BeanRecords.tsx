@@ -112,12 +112,14 @@ export default function BeanRecords() {
   const [calcOperator, setCalcOperator] = useState<'-' | '+'>('-')
 
   const calcResult = (() => {
-    const bags1 = parseFloat(calcBags1) || 0
-    const viss1 = parseFloat(calcViss1) || 0
-    const val1 = parseFloat(calcValue1) || 0
-    const bags2 = parseFloat(calcBags2) || 0
-    const viss2 = parseFloat(calcViss2) || 0
-    const val2 = parseFloat(calcValue2) || 0
+    // Clean commas and whitespace before parsing
+    const clean = (s: string) => parseFloat(s.replace(/[, ]/g, '')) || 0
+    const bags1 = clean(calcBags1)
+    const viss1 = clean(calcViss1)
+    const val1 = clean(calcValue1)
+    const bags2 = clean(calcBags2)
+    const viss2 = clean(calcViss2)
+    const val2 = clean(calcValue2)
     const op = calcOperator === '-' ? -1 : 1
     return {
       bags: bags1 + op * bags2,
@@ -125,6 +127,27 @@ export default function BeanRecords() {
       value: val1 + op * val2,
     }
   })()
+
+  // Fill editing row 3 (next empty unsaved row) with calculator result
+  const useCalcResult = () => {
+    const emptyRow = editingRows.find(r => r.bags === 0 && r.viss === 0 && r.value === 0 && !r.customer_name)
+    if (emptyRow) {
+      setEditingRows(prev => prev.map(r =>
+        r.tempId === emptyRow.tempId
+          ? { ...r, bags: calcResult.bags, viss: calcResult.viss, value: calcResult.value }
+          : r
+      ))
+      toast.success('Result filled into empty row')
+    } else {
+      // No empty row found — create a new one with the result
+      const row = createEmptyRow(activeBeanType, defaultDate)
+      row.bags = calcResult.bags
+      row.viss = calcResult.viss
+      row.value = calcResult.value
+      setEditingRows(prev => [...prev, row])
+      toast.success('New row created with result')
+    }
+  }
 
   // Queries
   const { data: weightMasterList } = useWeightMasterList()
@@ -444,7 +467,7 @@ export default function BeanRecords() {
             <div className="border-t-2 border-gray-300 dark:border-gray-600 my-1" />
 
             {/* Result row */}
-            <div className="grid grid-cols-[1fr_1fr_auto_1fr] gap-2 items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+            <div className="grid grid-cols-[1fr_1fr_auto_1fr_auto] gap-2 items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
               <div className="text-lg font-bold text-green-800 dark:text-green-200">
                 {calcResult.bags.toLocaleString()} အိတ်
               </div>
@@ -455,6 +478,13 @@ export default function BeanRecords() {
               <div className="text-lg font-bold text-green-800 dark:text-green-200">
                 {calcResult.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
+              <button
+                onClick={useCalcResult}
+                className="px-3 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors whitespace-nowrap"
+                title="Fill result into next empty row"
+              >
+                ✓ Use Result
+              </button>
             </div>
           </div>
         )}
