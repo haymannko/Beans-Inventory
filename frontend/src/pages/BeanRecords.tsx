@@ -47,6 +47,25 @@ function calculateValue(beanWeight: number, bags: number, viss: number, price: n
   return ((beanWeight / 2) * bags + viss) * price / beanWeight
 }
 
+// Safely evaluate simple math expressions like "3558-3504", "10+4", "20*3", "100/5"
+function evalMath(expr: string): number {
+  const cleaned = expr.replace(/\s/g, '')
+  // Match: number operator number (supports chained: 10-4-2)
+  if (!/^[0-9]+\.?[0-9]*([+\-*/][0-9]+\.?[0-9]*)+$/.test(cleaned)) return NaN
+  // Use Function constructor (safe: only digits and operators allowed by regex above)
+  const result = new Function(`return (${cleaned})`)()
+  return typeof result === 'number' && isFinite(result) ? result : NaN
+}
+
+// Parse input value: if it contains math ops, evaluate; otherwise return the number
+function parseInputValue(raw: string): number {
+  if (raw === '' || raw === '-') return 0
+  const num = Number(raw)
+  if (!isNaN(num)) return num
+  const result = evalMath(raw)
+  return isNaN(result) ? 0 : result
+}
+
 export default function BeanRecords() {
   // Active bean type tab - persisted to localStorage
   const [activeBeanType, setActiveBeanType] = useState(() => {
@@ -363,7 +382,8 @@ export default function BeanRecords() {
                     <input
                       type="number"
                       value={row.bags || ''}
-                      onChange={(e) => updateNewRow(row.tempId, 'bags', Number(e.target.value))}
+                      onBlur={(e) => updateNewRow(row.tempId, 'bags', parseInputValue(e.target.value))}
+                      onChange={(e) => updateNewRow(row.tempId, 'bags', parseInputValue(e.target.value))}
                       className="w-full bg-transparent border border-blue-300 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
                       min="0"
                     />
@@ -373,7 +393,8 @@ export default function BeanRecords() {
                       type="number"
                       step="0.01"
                       value={row.viss || ''}
-                      onChange={(e) => updateNewRow(row.tempId, 'viss', Number(e.target.value))}
+                      onBlur={(e) => updateNewRow(row.tempId, 'viss', parseInputValue(e.target.value))}
+                      onChange={(e) => updateNewRow(row.tempId, 'viss', parseInputValue(e.target.value))}
                       className="w-full bg-transparent border border-blue-300 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
                       min="0"
                     />
@@ -383,7 +404,8 @@ export default function BeanRecords() {
                       type="number"
                       step="0.01"
                       value={row.price || ''}
-                      onChange={(e) => updateNewRow(row.tempId, 'price', Number(e.target.value))}
+                      onBlur={(e) => updateNewRow(row.tempId, 'price', parseInputValue(e.target.value))}
+                      onChange={(e) => updateNewRow(row.tempId, 'price', parseInputValue(e.target.value))}
                       className="w-full bg-transparent border border-blue-300 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
                       min="0"
                     />
