@@ -237,6 +237,28 @@ export default function BeanRecords() {
     return rows
   }, [sortedRecords, editingRows, startBags, startViss, startValue, weightMasterList, activeBeanType])
 
+  // Adjusted display balances: when balViss > beanWeight/2, add 1 bag and subtract beanWeight from viss
+  const adjustedLedgerData = useMemo(() => {
+    const wm = weightMasterList?.find(w => w.id === activeBeanType)
+    const beanWeight = wm?.weight || 55.25
+    return ledgerData.map(row => {
+      if (row.balViss > beanWeight / 2) {
+        return {
+          ...row,
+          displayBalBags: row.balBags + 1,
+          displayBalViss: row.balViss - beanWeight,
+          displayBalValue: row.balValue,
+        }
+      }
+      return {
+        ...row,
+        displayBalBags: row.balBags,
+        displayBalViss: row.balViss,
+        displayBalValue: row.balValue,
+      }
+    })
+  }, [ledgerData, weightMasterList, activeBeanType])
+
   const switchTab = (newTab: string) => {
     // Save current rows before switching
     localStorage.setItem(`beanRecords_editingRows_${activeBeanType}`, JSON.stringify(editingRows))
@@ -581,10 +603,18 @@ export default function BeanRecords() {
                   />
                 </td>
                 <td className="table-cell text-right font-bold text-blue-700 dark:text-blue-300">
-                  {formatNum(startBags)}
+                  {formatNum((() => {
+                    const wm = weightMasterList?.find(w => w.id === activeBeanType)
+                    const bw = wm?.weight || 55.25
+                    return startViss > bw / 2 ? startBags + 1 : startBags
+                  })())}
                 </td>
                 <td className="table-cell text-right font-bold text-blue-700 dark:text-blue-300">
-                  {formatNum(startViss)}
+                  {formatNum((() => {
+                    const wm = weightMasterList?.find(w => w.id === activeBeanType)
+                    const bw = wm?.weight || 55.25
+                    return startViss > bw / 2 ? startViss - bw : startViss
+                  })())}
                 </td>
                 <td className="table-cell text-right font-bold text-blue-700 dark:text-blue-300">
                   {formatNum(startValue)}
@@ -607,7 +637,7 @@ export default function BeanRecords() {
                   </td>
                 </tr>
               ) : (
-                ledgerData.map((row) => (
+                adjustedLedgerData.map((row) => (
                   <tr
                     key={row.id}
                     className={
@@ -796,17 +826,17 @@ export default function BeanRecords() {
 
                     {/* Balance Bags */}
                     <td className="table-cell px-1 text-right font-bold bg-green-50/50 dark:bg-green-900/10">
-                      {formatNum(row.balBags)}
+                      {formatNum(row.displayBalBags)}
                     </td>
 
                     {/* Balance Viss */}
                     <td className="table-cell px-1 text-right font-bold bg-green-50/50 dark:bg-green-900/10">
-                      {formatNum(row.balViss)}
+                      {formatNum(row.displayBalViss)}
                     </td>
 
                     {/* Balance Value */}
                     <td className="table-cell px-1 text-right font-bold bg-green-50/50 dark:bg-green-900/10">
-                      {formatNum(row.balValue)}
+                      {formatNum(row.displayBalValue)}
                     </td>
 
                     {/* Actions */}
@@ -891,13 +921,13 @@ export default function BeanRecords() {
                     စုစုပေါင်း (Total)
                   </td>
                   <td className="table-cell text-right text-green-700 dark:text-green-300">
-                    {formatNum(ledgerData[ledgerData.length - 1]?.balBags || startBags)}
+                    {formatNum(adjustedLedgerData[adjustedLedgerData.length - 1]?.displayBalBags || startBags)}
                   </td>
                   <td className="table-cell text-right text-green-700 dark:text-green-300">
-                    {formatNum(ledgerData[ledgerData.length - 1]?.balViss || startViss)}
+                    {formatNum(adjustedLedgerData[adjustedLedgerData.length - 1]?.displayBalViss || startViss)}
                   </td>
                   <td className="table-cell text-right text-green-700 dark:text-green-300">
-                    {formatNum(ledgerData[ledgerData.length - 1]?.balValue || startValue)}
+                    {formatNum(adjustedLedgerData[adjustedLedgerData.length - 1]?.displayBalValue || startValue)}
                   </td>
                   <td className="table-cell"></td>
                 </tr>
