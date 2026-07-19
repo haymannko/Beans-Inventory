@@ -237,16 +237,17 @@ export default function BeanRecords() {
     return rows
   }, [sortedRecords, editingRows, startBags, startViss, startValue, weightMasterList, activeBeanType])
 
-  // Adjusted display balances: when balViss > beanWeight/2, add 1 bag and subtract beanWeight from viss
+  // Adjusted display balances: when balViss > beanWeight/2, add 1 bag and subtract beanWeight/2 from viss
   const adjustedLedgerData = useMemo(() => {
     const wm = weightMasterList?.find(w => w.id === activeBeanType)
     const beanWeight = wm?.weight || 55.25
+    const halfWeight = beanWeight / 2
     return ledgerData.map(row => {
-      if (row.balViss > beanWeight / 2) {
+      if (row.balViss > halfWeight) {
         return {
           ...row,
           displayBalBags: row.balBags + 1,
-          displayBalViss: row.balViss - beanWeight,
+          displayBalViss: row.balViss - halfWeight,
           displayBalValue: row.balValue,
         }
       }
@@ -613,7 +614,7 @@ export default function BeanRecords() {
                   {formatNum((() => {
                     const wm = weightMasterList?.find(w => w.id === activeBeanType)
                     const bw = wm?.weight || 55.25
-                    return startViss > bw / 2 ? startViss - bw : startViss
+                    return startViss > bw / 2 ? startViss - bw / 2 : startViss
                   })())}
                 </td>
                 <td className="table-cell text-right font-bold text-blue-700 dark:text-blue-300">
