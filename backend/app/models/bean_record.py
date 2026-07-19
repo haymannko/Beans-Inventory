@@ -18,6 +18,7 @@ class BeanRecord(Base):
     )
     date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     customer_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    record_type: Mapped[str] = mapped_column(String(20), nullable=False, default="sale")  # 'sale' or 'arrival'
     bags: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     viss: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=0)
     price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=0)

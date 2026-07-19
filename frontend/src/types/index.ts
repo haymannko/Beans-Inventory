@@ -247,6 +247,7 @@ export interface BeanRecord {
   bean_type_name?: string
   date: string
   customer_name: string
+  record_type: 'sale' | 'arrival'
   bags: number
   viss: number
   price: number
@@ -260,6 +261,7 @@ export interface CreateBeanRecordRequest {
   bean_type_id: string
   date: string
   customer_name: string
+  record_type: 'sale' | 'arrival'
   bags: number
   viss: number
   price: number

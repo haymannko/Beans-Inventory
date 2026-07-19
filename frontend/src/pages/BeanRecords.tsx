@@ -26,9 +26,10 @@ interface EditableRow {
   viss: number
   price: number
   value: number
+  type: 'sale' | 'arrival'  // sale = outgoing (-), arrival = incoming (+)
 }
 
-function createEmptyRow(beanTypeId: string, date: string): EditableRow {
+function createEmptyRow(beanTypeId: string, date: string, rowType: 'sale' | 'arrival' = 'sale'): EditableRow {
   return {
     tempId: `new-${Date.now()}-${Math.random()}`,
     bean_type_id: beanTypeId,
@@ -38,6 +39,7 @@ function createEmptyRow(beanTypeId: string, date: string): EditableRow {
     viss: 0,
     price: 0,
     value: 0,
+    type: rowType,
   }
 }
 
@@ -158,6 +160,7 @@ export default function BeanRecords() {
 
     const rows: Array<{
       type: 'saved' | 'editing'
+      rowType: 'sale' | 'arrival'
       id: string
       date: string
       customer_name: string
@@ -171,23 +174,26 @@ export default function BeanRecords() {
       original?: any
     }> = []
 
-    // Saved records first — negate bags/viss (sales = outgoing stock)
+    // Saved records — use record_type to determine sign
     for (const rec of sortedRecords) {
-      const negBags = -Math.abs(rec.bags)
-      const negViss = -Math.abs(rec.viss)
-      const negValue = -Math.abs(rec.value)
-      balBags += negBags
-      balViss += negViss
-      balValue += negValue
+      const recType = (rec as any).record_type || 'sale'
+      const sign = recType === 'sale' ? -1 : 1
+      const displayBags = sign * Math.abs(rec.bags)
+      const displayViss = sign * Math.abs(rec.viss)
+      const displayValue = sign * Math.abs(rec.value)
+      balBags += displayBags
+      balViss += displayViss
+      balValue += displayValue
       rows.push({
         type: 'saved',
+        rowType: recType as 'sale' | 'arrival',
         id: rec.id,
         date: rec.date,
         customer_name: rec.customer_name,
-        bags: negBags,
-        viss: negViss,
+        bags: displayBags,
+        viss: displayViss,
         price: rec.price,
-        value: negValue,
+        value: displayValue,
         balBags,
         balViss,
         balValue,
@@ -195,24 +201,26 @@ export default function BeanRecords() {
       })
     }
 
-    // Editing rows (unsaved) at the end — also subtract (sales)
+    // Editing rows (unsaved) at the end — respect type (sale=negate, arrival=positive)
     for (const row of editingRows) {
       const computedValue = row.price > 0 ? calculateValue(beanWeight, row.bags, row.viss, row.price) : row.value
-      const negBags = -Math.abs(row.bags)
-      const negViss = -Math.abs(row.viss)
-      const negValue = -Math.abs(computedValue)
-      balBags += negBags
-      balViss += negViss
-      balValue += negValue
+      const sign = row.type === 'sale' ? -1 : 1
+      const displayBags = sign * Math.abs(row.bags)
+      const displayViss = sign * Math.abs(row.viss)
+      const displayValue = sign * Math.abs(computedValue)
+      balBags += displayBags
+      balViss += displayViss
+      balValue += displayValue
       rows.push({
         type: 'editing',
+        rowType: row.type,
         id: row.tempId,
         date: row.date,
         customer_name: row.customer_name,
-        bags: negBags,
-        viss: negViss,
+        bags: displayBags,
+        viss: displayViss,
         price: row.price,
-        value: negValue,
+        value: displayValue,
         balBags,
         balViss,
         balValue,
@@ -244,6 +252,11 @@ export default function BeanRecords() {
     setEditingRows((prev) => [...prev, row])
   }
 
+  const addNewArrival = () => {
+    const row = createEmptyRow(activeBeanType, defaultDate, 'arrival')
+    setEditingRows((prev) => [...prev, row])
+  }
+
   const removeNewRow = (tempId: string) => {
     setEditingRows((prev) => prev.filter((r) => r.tempId !== tempId))
   }
@@ -251,6 +264,12 @@ export default function BeanRecords() {
   const updateNewRow = (tempId: string, field: keyof EditableRow, value: string | number) => {
     setEditingRows((prev) =>
       prev.map((r) => (r.tempId === tempId ? { ...r, [field]: value } : r))
+    )
+  }
+
+  const toggleRowType = (tempId: string) => {
+    setEditingRows((prev) =>
+      prev.map((r) => (r.tempId === tempId ? { ...r, type: r.type === 'sale' ? 'arrival' : 'sale' } : r))
     )
   }
 
@@ -272,6 +291,7 @@ export default function BeanRecords() {
         bean_type_id: row.bean_type_id,
         date: row.date,
         customer_name: row.customer_name,
+        record_type: row.type,
         bags: row.bags,
         viss: row.viss,
         price: row.price,
@@ -337,8 +357,11 @@ export default function BeanRecords() {
           <button onClick={handleExport} className="btn-secondary flex items-center justify-center gap-2">
             <FiDownload className="w-4 h-4" /> Export
           </button>
+          <button onClick={addNewArrival} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+            <FiPlus className="w-4 h-4" /> + အဝင် (Arrival)
+          </button>
           <button onClick={addNewRow} className="btn-primary flex items-center justify-center gap-2">
-            <FiPlus className="w-4 h-4" /> New Record
+            <FiPlus className="w-4 h-4" /> + အရောင်း (Sale)
           </button>
         </div>
       </div>
@@ -450,6 +473,7 @@ export default function BeanRecords() {
             <thead className="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10">
               <tr>
                 <th className="table-header min-w-[100px]">နေ့စွဲ</th>
+                <th className="table-header min-w-[60px]">အမျိုးအစား</th>
                 <th className="table-header min-w-[120px]">အမည်</th>
                 <th className="table-header min-w-[80px] text-right bg-red-50 dark:bg-red-900/20">အိတ်</th>
                 <th className="table-header min-w-[80px] text-right bg-red-50 dark:bg-red-900/20">ပိဿာ</th>
@@ -464,7 +488,7 @@ export default function BeanRecords() {
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {/* Starting Balance Row */}
               <tr className="bg-blue-50 dark:bg-blue-900/20 font-medium">
-                <td className="table-cell text-blue-700 dark:text-blue-300" colSpan={2}>
+                <td className="table-cell text-blue-700 dark:text-blue-300" colSpan={3}>
                   စတင်ဘဏ္ဍာ (Starting Balance)
                 </td>
                 <td className="table-cell px-1">
@@ -512,13 +536,13 @@ export default function BeanRecords() {
               {/* Ledger rows */}
               {isLoading ? (
                 <tr>
-                  <td colSpan={10} className="text-center py-8">
+                  <td colSpan={11} className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto" />
                   </td>
                 </tr>
               ) : ledgerData.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="text-center py-8 text-gray-500">
+                  <td colSpan={11} className="text-center py-8 text-gray-500">
                     <FiFileText className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                     No records found. Click "New Record" to add one.
                   </td>
@@ -544,6 +568,31 @@ export default function BeanRecords() {
                         />
                       ) : (
                         <span>{row.date}</span>
+                      )}
+                    </td>
+
+                    {/* Type indicator */}
+                    <td className="table-cell px-1">
+                      {row.type === 'editing' ? (
+                        <button
+                          onClick={() => toggleRowType(row.id)}
+                          className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                            row.rowType === 'arrival'
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200'
+                              : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200'
+                          }`}
+                          title="Click to toggle between Sale and Arrival"
+                        >
+                          {row.rowType === 'arrival' ? '🟢 အဝင်' : '🔴 အရောင်း'}
+                        </button>
+                      ) : (
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          row.rowType === 'sale'
+                            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                            : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                        }`}>
+                          {row.rowType === 'sale' ? '🔴 အရောင်း' : '🟢 အဝင်'}
+                        </span>
                       )}
                     </td>
 
@@ -691,7 +740,7 @@ export default function BeanRecords() {
               {/* Grand Total Row */}
               {ledgerData.length > 0 && (
                 <tr className="bg-gray-100 dark:bg-gray-800 font-bold border-t-2 border-gray-300 dark:border-gray-600">
-                  <td className="table-cell" colSpan={6}>
+                  <td className="table-cell" colSpan={7}>
                     စုစုပေါင်း (Total)
                   </td>
                   <td className="table-cell text-right text-green-700 dark:text-green-300">
