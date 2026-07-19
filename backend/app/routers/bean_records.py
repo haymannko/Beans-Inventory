@@ -222,6 +222,8 @@ async def update_bean_record(
         record.date = request.date
     if request.customer_name is not None:
         record.customer_name = request.customer_name
+    if request.record_type is not None:
+        record.record_type = request.record_type
     if request.bags is not None:
         record.bags = request.bags
     if request.viss is not None:

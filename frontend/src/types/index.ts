@@ -272,6 +272,7 @@ export interface UpdateBeanRecordRequest {
   bean_type_id?: string
   date?: string
   customer_name?: string
+  record_type?: 'sale' | 'arrival'
   bags?: number
   viss?: number
   price?: number
