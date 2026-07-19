@@ -237,24 +237,22 @@ export default function BeanRecords() {
     return rows
   }, [sortedRecords, editingRows, startBags, startViss, startValue, weightMasterList, activeBeanType])
 
-  // Adjusted display balances: when balViss > beanWeight/2, add 1 bag and subtract beanWeight/2 from viss
+  // Adjusted display balances: when balViss > beanWeight/2, iteratively add bags and subtract beanWeight/2
   const adjustedLedgerData = useMemo(() => {
     const wm = weightMasterList?.find(w => w.id === activeBeanType)
     const beanWeight = wm?.weight || 55.25
     const halfWeight = beanWeight / 2
     return ledgerData.map(row => {
-      if (row.balViss > halfWeight) {
-        return {
-          ...row,
-          displayBalBags: row.balBags + 1,
-          displayBalViss: row.balViss - halfWeight,
-          displayBalValue: row.balValue,
-        }
+      let extraBags = 0
+      let adjViss = row.balViss
+      while (adjViss > halfWeight) {
+        extraBags++
+        adjViss -= halfWeight
       }
       return {
         ...row,
-        displayBalBags: row.balBags,
-        displayBalViss: row.balViss,
+        displayBalBags: row.balBags + extraBags,
+        displayBalViss: adjViss,
         displayBalValue: row.balValue,
       }
     })
@@ -607,14 +605,20 @@ export default function BeanRecords() {
                   {formatNum((() => {
                     const wm = weightMasterList?.find(w => w.id === activeBeanType)
                     const bw = wm?.weight || 55.25
-                    return startViss > bw / 2 ? startBags + 1 : startBags
+                    const hw = bw / 2
+                    let extra = 0, v = startViss
+                    while (v > hw) { extra++; v -= hw }
+                    return startBags + extra
                   })())}
                 </td>
                 <td className="table-cell text-right font-bold text-blue-700 dark:text-blue-300">
                   {formatNum((() => {
                     const wm = weightMasterList?.find(w => w.id === activeBeanType)
                     const bw = wm?.weight || 55.25
-                    return startViss > bw / 2 ? startViss - bw / 2 : startViss
+                    const hw = bw / 2
+                    let v = startViss
+                    while (v > hw) { v -= hw }
+                    return v
                   })())}
                 </td>
                 <td className="table-cell text-right font-bold text-blue-700 dark:text-blue-300">
