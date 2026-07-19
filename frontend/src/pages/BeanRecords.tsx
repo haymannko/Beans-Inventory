@@ -708,6 +708,20 @@ export default function BeanRecords() {
                           <button
                             onClick={() => {
                               const editRow = editingRows.find(r => r.tempId === row.id)
+                              if (editRow) {
+                                // Add new row of same type
+                                const newRow = createEmptyRow(activeBeanType, defaultDate, editRow.type)
+                                setEditingRows(prev => [...prev, newRow])
+                              }
+                            }}
+                            className="p-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600"
+                            title="Add next row"
+                          >
+                            <FiPlus className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              const editRow = editingRows.find(r => r.tempId === row.id)
                               if (editRow) saveNewRow(editRow)
                             }}
                             className="p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600"
