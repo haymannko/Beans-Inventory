@@ -171,20 +171,23 @@ export default function BeanRecords() {
       original?: any
     }> = []
 
-    // Saved records first
+    // Saved records first — negate bags/viss (sales = outgoing stock)
     for (const rec of sortedRecords) {
-      balBags += rec.bags
-      balViss += rec.viss
-      balValue += rec.value
+      const negBags = -Math.abs(rec.bags)
+      const negViss = -Math.abs(rec.viss)
+      const negValue = -Math.abs(rec.value)
+      balBags += negBags
+      balViss += negViss
+      balValue += negValue
       rows.push({
         type: 'saved',
         id: rec.id,
         date: rec.date,
         customer_name: rec.customer_name,
-        bags: rec.bags,
-        viss: rec.viss,
+        bags: negBags,
+        viss: negViss,
         price: rec.price,
-        value: rec.value,
+        value: negValue,
         balBags,
         balViss,
         balValue,
@@ -192,21 +195,24 @@ export default function BeanRecords() {
       })
     }
 
-    // Editing rows (unsaved) at the end
+    // Editing rows (unsaved) at the end — also subtract (sales)
     for (const row of editingRows) {
       const computedValue = row.price > 0 ? calculateValue(beanWeight, row.bags, row.viss, row.price) : row.value
-      balBags += row.bags
-      balViss += row.viss
-      balValue += computedValue
+      const negBags = -Math.abs(row.bags)
+      const negViss = -Math.abs(row.viss)
+      const negValue = -Math.abs(computedValue)
+      balBags += negBags
+      balViss += negViss
+      balValue += negValue
       rows.push({
         type: 'editing',
         id: row.tempId,
         date: row.date,
         customer_name: row.customer_name,
-        bags: row.bags,
-        viss: row.viss,
+        bags: negBags,
+        viss: negViss,
         price: row.price,
-        value: computedValue,
+        value: negValue,
         balBags,
         balViss,
         balValue,
