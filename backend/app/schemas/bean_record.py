@@ -18,7 +18,7 @@ class BeanRecordCreate(BaseModel):
 
 class BeanRecordUpdate(BaseModel):
     bean_type_id: Optional[uuid.UUID] = None
-    date: Optional[date] = None
+    date: Optional[str] = None
     customer_name: Optional[str] = Field(None, min_length=1, max_length=200)
     record_type: Optional[str] = Field(None, pattern="^(sale|arrival)$")
     bags: Optional[int] = Field(None, ge=0)

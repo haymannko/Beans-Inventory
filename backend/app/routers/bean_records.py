@@ -219,7 +219,8 @@ async def update_bean_record(
         await _get_bean_weight(db, new_id_str)
         record.bean_type_id = new_id_str
     if request.date is not None:
-        record.date = request.date
+        from datetime import date as date_type
+        record.date = date_type.fromisoformat(request.date) if isinstance(request.date, str) else request.date
     if request.customer_name is not None:
         record.customer_name = request.customer_name
     if request.record_type is not None:
