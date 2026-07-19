@@ -237,7 +237,7 @@ export default function BeanRecords() {
     return rows
   }, [sortedRecords, editingRows, startBags, startViss, startValue, weightMasterList, activeBeanType])
 
-  // Adjusted display balances: when balViss > beanWeight/2, add 1 to remaining bags
+  // Adjusted display balances: when balViss > beanWeight/2, add 1 bag and subtract beanWeight from viss
   const adjustedLedgerData = useMemo(() => {
     const wm = weightMasterList?.find(w => w.id === activeBeanType)
     const beanWeight = wm?.weight || 55.25
@@ -246,7 +246,7 @@ export default function BeanRecords() {
         return {
           ...row,
           displayBalBags: row.balBags + 1,
-          displayBalViss: row.balViss,
+          displayBalViss: row.balViss - beanWeight,
           displayBalValue: row.balValue,
         }
       }
@@ -610,7 +610,11 @@ export default function BeanRecords() {
                   })())}
                 </td>
                 <td className="table-cell text-right font-bold text-blue-700 dark:text-blue-300">
-                  {formatNum(startViss)}
+                  {formatNum((() => {
+                    const wm = weightMasterList?.find(w => w.id === activeBeanType)
+                    const bw = wm?.weight || 55.25
+                    return startViss > bw / 2 ? startViss - bw : startViss
+                  })())}
                 </td>
                 <td className="table-cell text-right font-bold text-blue-700 dark:text-blue-300">
                   {formatNum(startValue)}
