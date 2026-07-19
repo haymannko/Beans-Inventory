@@ -497,7 +497,6 @@ export default function BeanRecords() {
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <th className="table-header">နေ့စွဲ</th>
-                <th className="table-header">ကုန်အမျိုးအမည်</th>
                 <th className="table-header">အမည်</th>
                 <th className="table-header">အိတ်</th>
                 <th className="table-header">ပိဿာ</th>
@@ -517,18 +516,6 @@ export default function BeanRecords() {
                       onChange={(e) => updateNewRow(row.tempId, 'date', e.target.value)}
                       className="w-full bg-transparent border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                  </td>
-                  <td className="table-cell px-1">
-                    <select
-                      value={row.bean_type_id}
-                      onChange={(e) => updateNewRow(row.tempId, 'bean_type_id', e.target.value)}
-                      className="w-full bg-transparent border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select</option>
-                      {weightMasterList?.map((wm) => (
-                        <option key={wm.id} value={wm.id}>{wm.bean_name}</option>
-                      ))}
-                    </select>
                   </td>
                   <td className="table-cell px-1">
                     <input
@@ -630,13 +617,13 @@ export default function BeanRecords() {
               {/* Saved records */}
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-8">
+                  <td colSpan={7} className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto" />
                   </td>
                 </tr>
               ) : records?.length === 0 && editingRows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-8 text-gray-500">
+                  <td colSpan={7} className="text-center py-8 text-gray-500">
                     <FiFileText className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                     No records found. Click "New Record" to add one.
                   </td>
@@ -645,7 +632,6 @@ export default function BeanRecords() {
                 records?.map((record) => (
                   <tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <td className="table-cell">{record.date}</td>
-                    <td className="table-cell font-medium">{record.bean_type_name}</td>
                     <td className="table-cell">{record.customer_name}</td>
                     <td className="table-cell text-right">{record.bags}</td>
                     <td className="table-cell text-right">{record.viss.toFixed(2)}</td>
