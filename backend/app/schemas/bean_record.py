@@ -23,7 +23,7 @@ class BeanRecordUpdate(BaseModel):
     record_type: Optional[str] = Field(None, pattern="^(sale|arrival)$")
     bags: Optional[int] = Field(None, ge=0)
     viss: Optional[float] = Field(None, ge=0)
-    price: Optional[float] = Field(None, gt=0)
+    price: Optional[float] = Field(None, ge=0)
 
 
 class BeanRecordResponse(BaseModel):

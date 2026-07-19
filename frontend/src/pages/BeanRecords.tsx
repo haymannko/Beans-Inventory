@@ -288,7 +288,7 @@ export default function BeanRecords() {
       bags: Math.abs(record.bags),
       viss: Math.abs(record.viss),
       price: record.price,
-      record_type: record.rowType || 'sale',
+      record_type: record.record_type || 'sale',
     })
   }
 
@@ -301,15 +301,20 @@ export default function BeanRecords() {
           date: editSavedData.date,
           customer_name: editSavedData.customer_name,
           record_type: editSavedData.record_type,
-          bags: Math.abs(editSavedData.bags),
+          bags: Math.abs(Math.round(editSavedData.bags)),
           viss: Math.abs(editSavedData.viss),
-          price: editSavedData.price || 0.01,
+          price: Math.abs(editSavedData.price) || 0.01,
         },
       })
       toast.success('Record updated')
       setEditingSavedId(null)
-    } catch {
-      toast.error('Failed to update record')
+    } catch (err: any) {
+      console.error('Failed to update record:', err?.response?.data || err)
+      const detail = err?.response?.data?.detail
+      const msg = typeof detail === 'string' ? detail
+        : Array.isArray(detail) ? detail.map((d: any) => `${d.loc?.join('.')}: ${d.msg}`).join('; ')
+        : JSON.stringify(detail)
+      toast.error(msg ? `Update failed: ${msg}` : 'Failed to update record')
     }
   }
 
@@ -752,6 +757,22 @@ export default function BeanRecords() {
                             placeholder="Enter value"
                           />
                         )
+                      ) : editingSavedId === row.id ? (
+                        // Live-calculated value when editing saved record
+                        (() => {
+                          const absBags = Math.abs(editSavedData.bags)
+                          const absViss = Math.abs(editSavedData.viss)
+                          const wm = weightMasterList?.find(w => w.id === activeBeanType)
+                          const bw = wm?.weight || 55.25
+                          const liveValue = editSavedData.price > 0
+                            ? calculateValue(bw, absBags, absViss, editSavedData.price)
+                            : 0
+                          return (
+                            <span className={`text-sm px-2 ${liveValue < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+                              {formatNum(liveValue)}
+                            </span>
+                          )
+                        })()
                       ) : (
                         <span className={row.value < 0 ? 'text-red-600 dark:text-red-400' : ''}>
                           {row.value !== 0 ? formatNum(row.value) : ''}
