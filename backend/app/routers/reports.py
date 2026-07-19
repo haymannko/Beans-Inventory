@@ -20,7 +20,7 @@ router = APIRouter(prefix="/api/reports", tags=["Reports"])
 
 @router.get("", response_model=ReportResponse)
 async def get_report(
-    report_type: str = Query("daily", pattern="^(daily|weekly|monthly|custom)$"),
+    report_type: str = Query("daily", pattern="^(daily|weekly|monthly|yearly|custom)$"),
     start_date: date | None = Query(None),
     end_date: date | None = Query(None),
     bean_type_id: uuid.UUID | None = Query(None),
@@ -43,7 +43,7 @@ async def get_report(
 
 @router.get("/export/excel")
 async def export_report_excel(
-    report_type: str = Query("daily", pattern="^(daily|weekly|monthly|custom)$"),
+    report_type: str = Query("daily", pattern="^(daily|weekly|monthly|yearly|custom)$"),
     start_date: date | None = Query(None),
     end_date: date | None = Query(None),
     bean_type_id: uuid.UUID | None = Query(None),
@@ -103,7 +103,7 @@ async def export_report_excel(
 
 @router.get("/export/pdf")
 async def export_report_pdf(
-    report_type: str = Query("daily", pattern="^(daily|weekly|monthly|custom)$"),
+    report_type: str = Query("daily", pattern="^(daily|weekly|monthly|yearly|custom)$"),
     start_date: date | None = Query(None),
     end_date: date | None = Query(None),
     bean_type_id: uuid.UUID | None = Query(None),
