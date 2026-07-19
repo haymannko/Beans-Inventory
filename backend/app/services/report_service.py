@@ -29,6 +29,9 @@ async def generate_report(
     elif report_type == "monthly":
         start_date = today.replace(day=1)
         end_date = today
+    elif report_type == "yearly":
+        start_date = today.replace(month=1, day=1)
+        end_date = today
     elif report_type == "custom":
         if start_date is None or end_date is None:
             raise ValueError("Custom report requires start_date and end_date")

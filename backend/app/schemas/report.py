@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class ReportRequest(BaseModel):
-    report_type: str = "daily"  # daily, weekly, monthly, custom
+    report_type: str = "daily"  # daily, weekly, monthly, yearly, custom
     start_date: date | None = None
     end_date: date | None = None
     bean_type_id: str | None = None
