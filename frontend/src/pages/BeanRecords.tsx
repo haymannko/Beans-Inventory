@@ -244,7 +244,7 @@ export default function BeanRecords() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Choose ကုန်အမျိုးအမည် (for new rows)
+              Choose ကုန်အမျိုးအမည် (for page)
             </label>
             <select
               value={activeBeanType}
