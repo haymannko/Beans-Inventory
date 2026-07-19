@@ -14,8 +14,9 @@ async def test_login_success(client: AsyncClient, admin_user):
 
 
 @pytest.mark.asyncio
-async def test_login_invalid_credentials(client: AsyncClient):
-    response = await client.post("/api/auth/login", json={"username": "wrong", "password": "wrong"})
+async def test_login_invalid_credentials(client: AsyncClient, admin_user):
+    # Use existing user with wrong password (auto-create doesn't apply to known users)
+    response = await client.post("/api/auth/login", json={"username": "testadmin", "password": "wrongpassword"})
     assert response.status_code == 401
 
 

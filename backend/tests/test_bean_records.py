@@ -80,7 +80,7 @@ async def test_create_bean_record_validation_negative_price(
     admin_token: str,
     weight_master_entry: WeightMaster,
 ):
-    """Test that zero or negative price is rejected."""
+    """Test that negative price is rejected, but zero price is allowed (manual value mode)."""
     response = await client.post(
         "/api/bean-records",
         json={
@@ -89,7 +89,7 @@ async def test_create_bean_record_validation_negative_price(
             "customer_name": "Test Customer",
             "bags": 10,
             "viss": 50.0,
-            "price": 0,
+            "price": -10,
         },
         headers=auth_header(admin_token),
     )
