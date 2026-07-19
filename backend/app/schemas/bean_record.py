@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class BeanRecordCreate(BaseModel):
@@ -17,6 +17,8 @@ class BeanRecordCreate(BaseModel):
 
 
 class BeanRecordUpdate(BaseModel):
+    model_config = ConfigDict(strict=False)
+
     bean_type_id: Optional[uuid.UUID] = None
     date: Optional[str] = None
     customer_name: Optional[str] = Field(None, min_length=1, max_length=200)
@@ -24,6 +26,17 @@ class BeanRecordUpdate(BaseModel):
     bags: Optional[int] = Field(None, ge=0)
     viss: Optional[float] = Field(None, ge=0)
     price: Optional[float] = Field(None, ge=0)
+
+    @field_validator("date", mode="before")
+    @classmethod
+    def coerce_date(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, date):
+            return v.isoformat()
+        if isinstance(v, str):
+            return v
+        return str(v)
 
 
 class BeanRecordResponse(BaseModel):
