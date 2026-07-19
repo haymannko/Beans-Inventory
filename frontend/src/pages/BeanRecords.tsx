@@ -8,6 +8,7 @@ import {
   FiFileText,
   FiSave,
   FiX,
+  FiEdit,
 } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import { useWeightMasterList } from '../hooks/useWeightMaster'
@@ -15,6 +16,7 @@ import {
   useBeanRecords,
   useCreateBeanRecord,
   useDeleteBeanRecord,
+  useUpdateBeanRecord,
 } from '../hooks/useBeanRecords'
 
 interface EditableRow {
@@ -142,6 +144,11 @@ export default function BeanRecords() {
   // Mutations
   const createMutation = useCreateBeanRecord()
   const deleteMutation = useDeleteBeanRecord()
+  const updateMutation = useUpdateBeanRecord()
+
+  // Editing saved records
+  const [editingSavedId, setEditingSavedId] = useState<string | null>(null)
+  const [editSavedData, setEditSavedData] = useState<{date: string, customer_name: string, bags: number, viss: number, price: number, record_type: 'sale' | 'arrival'}>({date: '', customer_name: '', bags: 0, viss: 0, price: 0, record_type: 'sale'})
 
   // Sort records by date ascending for running balance
   const sortedRecords = useMemo(() => {
@@ -271,6 +278,39 @@ export default function BeanRecords() {
     setEditingRows((prev) =>
       prev.map((r) => (r.tempId === tempId ? { ...r, type: r.type === 'sale' ? 'arrival' : 'sale' } : r))
     )
+  }
+
+  const startEditSaved = (record: any) => {
+    setEditingSavedId(record.id)
+    setEditSavedData({
+      date: record.date,
+      customer_name: record.customer_name,
+      bags: Math.abs(record.bags),
+      viss: Math.abs(record.viss),
+      price: record.price,
+      record_type: record.rowType || 'sale',
+    })
+  }
+
+  const saveEditSaved = async () => {
+    if (!editingSavedId) return
+    try {
+      await updateMutation.mutateAsync({
+        id: editingSavedId,
+        data: {
+          date: editSavedData.date,
+          customer_name: editSavedData.customer_name,
+          record_type: editSavedData.record_type,
+          bags: editSavedData.bags,
+          viss: editSavedData.viss,
+          price: editSavedData.price,
+        },
+      })
+      toast.success('Record updated')
+      setEditingSavedId(null)
+    } catch {
+      toast.error('Failed to update record')
+    }
   }
 
   const saveNewRow = async (row: EditableRow) => {
@@ -559,11 +599,14 @@ export default function BeanRecords() {
                   >
                     {/* Date */}
                     <td className="table-cell px-1">
-                      {row.type === 'editing' ? (
+                      {(row.type === 'editing' || editingSavedId === row.id) ? (
                         <input
                           type="date"
-                          value={row.date}
-                          onChange={(e) => updateNewRow(row.id, 'date', e.target.value)}
+                          value={row.type === 'editing' ? row.date : editSavedData.date}
+                          onChange={(e) => {
+                            if (row.type === 'editing') updateNewRow(row.id, 'date', e.target.value)
+                            else setEditSavedData(prev => ({...prev, date: e.target.value}))
+                          }}
                           className="w-full bg-transparent border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       ) : (
@@ -573,17 +616,20 @@ export default function BeanRecords() {
 
                     {/* Type indicator */}
                     <td className="table-cell px-1">
-                      {row.type === 'editing' ? (
+                      {(row.type === 'editing' || editingSavedId === row.id) ? (
                         <button
-                          onClick={() => toggleRowType(row.id)}
+                          onClick={() => {
+                            if (row.type === 'editing') toggleRowType(row.id)
+                            else setEditSavedData(prev => ({...prev, record_type: prev.record_type === 'sale' ? 'arrival' : 'sale'}))
+                          }}
                           className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                            row.rowType === 'arrival'
+                            (row.type === 'editing' ? row.rowType : editSavedData.record_type) === 'arrival'
                               ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200'
                               : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200'
                           }`}
-                          title="Click to toggle between Sale and Arrival"
+                          title="Click to toggle"
                         >
-                          {row.rowType === 'arrival' ? '🟢 အဝင်' : '🔴 အရောင်း'}
+                          {(row.type === 'editing' ? row.rowType : editSavedData.record_type) === 'arrival' ? '🟢 အဝင်' : '🔴 အရောင်း'}
                         </button>
                       ) : (
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
@@ -598,11 +644,14 @@ export default function BeanRecords() {
 
                     {/* Customer */}
                     <td className="table-cell px-1">
-                      {row.type === 'editing' ? (
+                      {(row.type === 'editing' || editingSavedId === row.id) ? (
                         <input
                           type="text"
-                          value={row.customer_name}
-                          onChange={(e) => updateNewRow(row.id, 'customer_name', e.target.value)}
+                          value={row.type === 'editing' ? row.customer_name : editSavedData.customer_name}
+                          onChange={(e) => {
+                            if (row.type === 'editing') updateNewRow(row.id, 'customer_name', e.target.value)
+                            else setEditSavedData(prev => ({...prev, customer_name: e.target.value}))
+                          }}
                           className="w-full bg-transparent border border-blue-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="Customer"
                         />
@@ -611,14 +660,22 @@ export default function BeanRecords() {
                       )}
                     </td>
 
-                    {/* Bags (in/out) */}
+                    {/* Bags */}
                     <td className="table-cell px-1 text-right">
-                      {row.type === 'editing' ? (
+                      {(row.type === 'editing' || editingSavedId === row.id) ? (
                         <input
                           type="number"
-                          value={row.bags || ''}
-                          onBlur={(e) => updateNewRow(row.id, 'bags', parseInputValue(e.target.value))}
-                          onChange={(e) => updateNewRow(row.id, 'bags', parseInputValue(e.target.value))}
+                          value={row.type === 'editing' ? (row.bags || '') : (editSavedData.bags || '')}
+                          onBlur={(e) => {
+                            const v = parseInputValue(e.target.value)
+                            if (row.type === 'editing') updateNewRow(row.id, 'bags', v)
+                            else setEditSavedData(prev => ({...prev, bags: v}))
+                          }}
+                          onChange={(e) => {
+                            const v = parseInputValue(e.target.value)
+                            if (row.type === 'editing') updateNewRow(row.id, 'bags', v)
+                            else setEditSavedData(prev => ({...prev, bags: v}))
+                          }}
                           className="w-full bg-transparent border border-blue-300 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       ) : (
@@ -628,15 +685,23 @@ export default function BeanRecords() {
                       )}
                     </td>
 
-                    {/* Viss (in/out) */}
+                    {/* Viss */}
                     <td className="table-cell px-1 text-right">
-                      {row.type === 'editing' ? (
+                      {(row.type === 'editing' || editingSavedId === row.id) ? (
                         <input
                           type="number"
                           step="0.01"
-                          value={row.viss || ''}
-                          onBlur={(e) => updateNewRow(row.id, 'viss', parseInputValue(e.target.value))}
-                          onChange={(e) => updateNewRow(row.id, 'viss', parseInputValue(e.target.value))}
+                          value={row.type === 'editing' ? (row.viss || '') : (editSavedData.viss || '')}
+                          onBlur={(e) => {
+                            const v = parseInputValue(e.target.value)
+                            if (row.type === 'editing') updateNewRow(row.id, 'viss', v)
+                            else setEditSavedData(prev => ({...prev, viss: v}))
+                          }}
+                          onChange={(e) => {
+                            const v = parseInputValue(e.target.value)
+                            if (row.type === 'editing') updateNewRow(row.id, 'viss', v)
+                            else setEditSavedData(prev => ({...prev, viss: v}))
+                          }}
                           className="w-full bg-transparent border border-blue-300 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       ) : (
@@ -648,13 +713,21 @@ export default function BeanRecords() {
 
                     {/* Price */}
                     <td className="table-cell px-1 text-right">
-                      {row.type === 'editing' ? (
+                      {(row.type === 'editing' || editingSavedId === row.id) ? (
                         <input
                           type="number"
                           step="0.01"
-                          value={row.price || ''}
-                          onBlur={(e) => updateNewRow(row.id, 'price', parseInputValue(e.target.value))}
-                          onChange={(e) => updateNewRow(row.id, 'price', parseInputValue(e.target.value))}
+                          value={row.type === 'editing' ? (row.price || '') : (editSavedData.price || '')}
+                          onBlur={(e) => {
+                            const v = parseInputValue(e.target.value)
+                            if (row.type === 'editing') updateNewRow(row.id, 'price', v)
+                            else setEditSavedData(prev => ({...prev, price: v}))
+                          }}
+                          onChange={(e) => {
+                            const v = parseInputValue(e.target.value)
+                            if (row.type === 'editing') updateNewRow(row.id, 'price', v)
+                            else setEditSavedData(prev => ({...prev, price: v}))
+                          }}
                           className="w-full bg-transparent border border-blue-300 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       ) : (
@@ -709,7 +782,6 @@ export default function BeanRecords() {
                             onClick={() => {
                               const editRow = editingRows.find(r => r.tempId === row.id)
                               if (editRow) {
-                                // Add new row of same type
                                 const newRow = createEmptyRow(activeBeanType, defaultDate, editRow.type)
                                 setEditingRows(prev => [...prev, newRow])
                               }
@@ -737,14 +809,40 @@ export default function BeanRecords() {
                             <FiX className="w-4 h-4" />
                           </button>
                         </div>
+                      ) : editingSavedId === row.id ? (
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={saveEditSaved}
+                            className="p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600"
+                            title="Save edit"
+                          >
+                            <FiSave className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setEditingSavedId(null)}
+                            className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
+                            title="Cancel edit"
+                          >
+                            <FiX className="w-4 h-4" />
+                          </button>
+                        </div>
                       ) : (
-                        <button
-                          onClick={() => handleDelete(row.id)}
-                          className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-500 hover:text-red-600"
-                          title="Delete"
-                        >
-                          <FiTrash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => startEditSaved(row.original || row)}
+                            className="p-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-500 hover:text-blue-600"
+                            title="Edit"
+                          >
+                            <FiEdit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(row.id)}
+                            className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-500 hover:text-red-600"
+                            title="Delete"
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
