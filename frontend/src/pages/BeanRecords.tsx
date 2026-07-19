@@ -301,9 +301,9 @@ export default function BeanRecords() {
           date: editSavedData.date,
           customer_name: editSavedData.customer_name,
           record_type: editSavedData.record_type,
-          bags: editSavedData.bags,
-          viss: editSavedData.viss,
-          price: editSavedData.price,
+          bags: Math.abs(editSavedData.bags),
+          viss: Math.abs(editSavedData.viss),
+          price: editSavedData.price || 0.01,
         },
       })
       toast.success('Record updated')
