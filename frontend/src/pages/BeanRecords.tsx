@@ -327,25 +327,36 @@ export default function BeanRecords() {
       toast.error('Please enter customer name')
       return
     }
+    const absBags = Math.abs(Math.round(row.bags))
+    const absViss = Math.abs(row.viss)
+    if (absBags <= 0 && absViss <= 0 && row.price <= 0 && row.value <= 0) {
+      toast.error('Please enter bags, viss, price, or value')
+      return
+    }
     try {
       const wm = weightMasterList?.find(w => w.id === row.bean_type_id)
       const beanWeight = wm?.weight || 55.25
-      const computedValue = row.price > 0 ? calculateValue(beanWeight, row.bags, row.viss, row.price) : row.value
+      const computedValue = row.price > 0 ? calculateValue(beanWeight, absBags, absViss, row.price) : Math.abs(row.value)
 
       await createMutation.mutateAsync({
         bean_type_id: row.bean_type_id,
         date: row.date,
         customer_name: row.customer_name,
         record_type: row.type,
-        bags: row.bags,
-        viss: row.viss,
-        price: row.price,
+        bags: absBags,
+        viss: absViss,
+        price: Math.abs(row.price),
         value: row.price > 0 ? undefined : computedValue,
       })
       toast.success('Record saved')
       setEditingRows((prev) => prev.filter((r) => r.tempId !== row.tempId))
-    } catch {
-      toast.error('Failed to save record')
+    } catch (err: any) {
+      console.error('Failed to save record:', err?.response?.data || err)
+      const detail = err?.response?.data?.detail
+      const msg = typeof detail === 'string' ? detail
+        : Array.isArray(detail) ? detail.map((d: any) => `${d.loc?.join('.')}: ${d.msg}`).join('; ')
+        : JSON.stringify(detail)
+      toast.error(msg ? `Save failed: ${msg}` : 'Failed to save record')
     }
   }
 
@@ -354,8 +365,11 @@ export default function BeanRecords() {
     try {
       await deleteMutation.mutateAsync(id)
       toast.success('Record deleted')
-    } catch {
-      toast.error('Failed to delete record')
+    } catch (err: any) {
+      console.error('Failed to delete record:', err?.response?.data || err)
+      const detail = err?.response?.data?.detail
+      const msg = typeof detail === 'string' ? detail : JSON.stringify(detail)
+      toast.error(msg ? `Delete failed: ${msg}` : 'Failed to delete record')
     }
   }
 
@@ -403,10 +417,10 @@ export default function BeanRecords() {
             <FiDownload className="w-4 h-4" /> Export
           </button>
           <button onClick={addNewArrival} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
-            <FiPlus className="w-4 h-4" /> + အဝင် (Arrival)
+            <FiPlus className="w-4 h-4" /> အဝင် (Arrival)
           </button>
           <button onClick={addNewRow} className="btn-primary flex items-center justify-center gap-2">
-            <FiPlus className="w-4 h-4" /> + အရောင်း (Sale)
+            <FiPlus className="w-4 h-4" /> အရောင်း (Sale)
           </button>
         </div>
       </div>
