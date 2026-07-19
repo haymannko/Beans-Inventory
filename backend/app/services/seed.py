@@ -139,6 +139,12 @@ async def seed_if_empty():
             else:
                 logger.info("Database already seeded.")
 
+            # Seed missing bean types for existing DBs
+            try:
+                await _seed_bean_types(session)
+            except Exception:
+                pass
+
             # Seed weight master for existing DBs that don't have it yet
             try:
                 await _seed_weight_master(session)
@@ -177,6 +183,23 @@ async def seed_if_empty():
 
         await session.commit()
         logger.info(f"Seeded {len(USERS)} users, {len(BEAN_TYPES)} bean types, and {len(WEIGHT_MASTER_DATA)} weight master records")
+
+
+async def _seed_bean_types(session):
+    """Seed missing bean types for existing databases."""
+    result = await session.execute(select(BeanType.name))
+    existing_names = {row[0] for row in result.all()}
+
+    missing = [bt for bt in BEAN_TYPES if bt["name"] not in existing_names]
+    if not missing:
+        return
+
+    for bt_data in missing:
+        bean_type = BeanType(name=bt_data["name"], description=bt_data["description"])
+        session.add(bean_type)
+
+    await session.commit()
+    logger.info(f"Seeded {len(missing)} missing bean types")
 
 
 async def _seed_weight_master(session):

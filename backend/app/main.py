@@ -160,6 +160,19 @@ async def _ensure_columns():
         await conn.run_sync(migrate)
 
 
+@app.post("/seed")
+async def run_seed():
+    """Manually trigger seed to add any missing data."""
+    try:
+        from app.services.seed import seed_if_empty, ensure_google_users_have_passwords
+        await seed_if_empty()
+        await ensure_google_users_have_passwords()
+        return {"status": "ok", "message": "Seed completed"}
+    except Exception as e:
+        logger.error(f"Seed error: {e}")
+        return {"status": "error", "message": str(e)}
+
+
 @app.on_event("shutdown")
 async def shutdown():
     logger.info("Shutting down application")
