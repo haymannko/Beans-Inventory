@@ -244,6 +244,21 @@ export default function BeanRecords() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Choose ကုန်အမျိုးအမည် (for new rows)
+            </label>
+            <select
+              value={activeBeanType}
+              onChange={(e) => switchTab(e.target.value)}
+              className="input-field"
+            >
+              <option value="">Select bean type</option>
+              {weightMasterList?.map((wm) => (
+                <option key={wm.id} value={wm.id}>{wm.bean_name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Default Date (for new rows)
             </label>
             <input
@@ -376,7 +391,21 @@ export default function BeanRecords() {
                   <td className="table-cell px-1">
                     {row.price > 0 ? (() => {
                       const wm = weightMasterList?.find(w => w.id === row.bean_type_id)
-                      const computed = wm ? calculateValue(wm.weight, row.bags, row.viss, row.price) : 0
+                      if (!wm) {
+                        // Weight master not loaded yet — show manual input as fallback
+                        return (
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={row.value || ''}
+                            onChange={(e) => updateNewRow(row.tempId, 'value', Number(e.target.value))}
+                            className="w-full bg-transparent border border-blue-300 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            min="0"
+                            placeholder="Enter value"
+                          />
+                        )
+                      }
+                      const computed = calculateValue(wm.weight, row.bags, row.viss, row.price)
                       return (
                         <span className="text-sm font-medium text-green-600 dark:text-green-400 px-2">
                           {computed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -390,7 +419,7 @@ export default function BeanRecords() {
                         onChange={(e) => updateNewRow(row.tempId, 'value', Number(e.target.value))}
                         className="w-full bg-transparent border border-blue-300 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
                         min="0"
-                        placeholder="Manual"
+                        placeholder="Enter value"
                       />
                     )}
                   </td>
