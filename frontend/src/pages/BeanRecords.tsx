@@ -47,11 +47,11 @@ function calculateValue(beanWeight: number, bags: number, viss: number, price: n
   return ((beanWeight / 2) * bags + viss) * price / beanWeight
 }
 
-// Safely evaluate simple math expressions like "3558-3504", "10+4", "20*3", "100/5"
+// Safely evaluate simple math expressions like "3558-3504", "10+4", "10-4+2"
 function evalMath(expr: string): number {
   const cleaned = expr.replace(/\s/g, '')
-  // Match: number operator number (supports chained: 10-4-2)
-  if (!/^[0-9]+\.?[0-9]*([+\-*/][0-9]+\.?[0-9]*)+$/.test(cleaned)) return NaN
+  // Only allow + and - operators: 3558-54, 10+4-2, etc.
+  if (!/^[0-9]+\.?[0-9]*([+\-][0-9]+\.?[0-9]*)+$/.test(cleaned)) return NaN
   // Use Function constructor (safe: only digits and operators allowed by regex above)
   const result = new Function(`return (${cleaned})`)()
   return typeof result === 'number' && isFinite(result) ? result : NaN
@@ -100,6 +100,31 @@ export default function BeanRecords() {
   useEffect(() => {
     localStorage.setItem(`beanRecords_editingRows_${activeBeanType}`, JSON.stringify(editingRows))
   }, [editingRows, activeBeanType])
+
+  // Calculator state
+  const [showCalculator, setShowCalculator] = useState(false)
+  const [calcBags1, setCalcBags1] = useState('')
+  const [calcViss1, setCalcViss1] = useState('')
+  const [calcValue1, setCalcValue1] = useState('')
+  const [calcBags2, setCalcBags2] = useState('')
+  const [calcViss2, setCalcViss2] = useState('')
+  const [calcValue2, setCalcValue2] = useState('')
+  const [calcOperator, setCalcOperator] = useState<'-' | '+'>('-')
+
+  const calcResult = (() => {
+    const bags1 = parseFloat(calcBags1) || 0
+    const viss1 = parseFloat(calcViss1) || 0
+    const val1 = parseFloat(calcValue1) || 0
+    const bags2 = parseFloat(calcBags2) || 0
+    const viss2 = parseFloat(calcViss2) || 0
+    const val2 = parseFloat(calcValue2) || 0
+    const op = calcOperator === '-' ? -1 : 1
+    return {
+      bags: bags1 + op * bags2,
+      viss: viss1 + op * viss2,
+      value: val1 + op * val2,
+    }
+  })()
 
   // Queries
   const { data: weightMasterList } = useWeightMasterList()
@@ -327,6 +352,112 @@ export default function BeanRecords() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Calculator */}
+      <div className="card p-4 mb-4">
+        <button
+          onClick={() => setShowCalculator(!showCalculator)}
+          className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+        >
+          <span className="text-base">🧮</span>
+          {showCalculator ? 'Hide Calculator' : 'Show Calculator (+ / −)'}
+        </button>
+        {showCalculator && (
+          <div className="mt-4 space-y-2">
+            {/* Column headers */}
+            <div className="grid grid-cols-[1fr_1fr_auto_1fr] gap-2 text-xs text-gray-500 dark:text-gray-400 font-medium px-1">
+              <div>အိတ် (Bags)</div>
+              <div>ပိဿာ (Viss)</div>
+              <div className="w-12" />
+              <div>တန်ဘိုး (Value)</div>
+            </div>
+
+            {/* Row 1: Starting balance */}
+            <div className="grid grid-cols-[1fr_1fr_auto_1fr] gap-2 items-center">
+              <input
+                type="number"
+                value={calcBags1}
+                onChange={(e) => setCalcBags1(e.target.value)}
+                className="input-field"
+                placeholder="0"
+              />
+              <input
+                type="number"
+                step="0.01"
+                value={calcViss1}
+                onChange={(e) => setCalcViss1(e.target.value)}
+                className="input-field"
+                placeholder="0"
+              />
+              <div className="w-12" />
+              <input
+                type="number"
+                step="0.01"
+                value={calcValue1}
+                onChange={(e) => setCalcValue1(e.target.value)}
+                className="input-field"
+                placeholder="0"
+              />
+            </div>
+
+            {/* Operator toggle */}
+            <div className="flex justify-center">
+              <button
+                onClick={() => setCalcOperator(calcOperator === '-' ? '+' : '-')}
+                className="w-10 h-10 flex items-center justify-center text-xl font-bold rounded-lg bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-colors"
+                title="Click to toggle + / −"
+              >
+                {calcOperator}
+              </button>
+            </div>
+
+            {/* Row 2: Amount to subtract/add */}
+            <div className="grid grid-cols-[1fr_1fr_auto_1fr] gap-2 items-center">
+              <input
+                type="number"
+                value={calcBags2}
+                onChange={(e) => setCalcBags2(e.target.value)}
+                className="input-field"
+                placeholder="0"
+              />
+              <input
+                type="number"
+                step="0.01"
+                value={calcViss2}
+                onChange={(e) => setCalcViss2(e.target.value)}
+                className="input-field"
+                placeholder="0"
+              />
+              <div className="w-12" />
+              <input
+                type="number"
+                step="0.01"
+                value={calcValue2}
+                onChange={(e) => setCalcValue2(e.target.value)}
+                className="input-field"
+                placeholder="0"
+              />
+            </div>
+
+            {/* Divider line */}
+            <div className="border-t-2 border-gray-300 dark:border-gray-600 my-1" />
+
+            {/* Result row */}
+            <div className="grid grid-cols-[1fr_1fr_auto_1fr] gap-2 items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+              <div className="text-lg font-bold text-green-800 dark:text-green-200">
+                {calcResult.bags.toLocaleString()} အိတ်
+              </div>
+              <div className="text-lg font-bold text-green-800 dark:text-green-200">
+                {calcResult.viss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ပိဿာ
+              </div>
+              <div className="w-12 text-center text-lg font-bold text-green-600 dark:text-green-400">=</div>
+              <div className="text-lg font-bold text-green-800 dark:text-green-200">
+                {calcResult.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Data Table */}
