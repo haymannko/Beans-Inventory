@@ -110,122 +110,169 @@ async def export_report_pdf(
     db: AsyncSession = Depends(get_db),
     _user: User = Depends(get_current_user),
 ):
-    """Export report as PDF file."""
+    """Export report as PDF file with Myanmar font support."""
     try:
         data = await generate_report(db, report_type, start_date, end_date, bean_type_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    font_path = os.path.join(os.path.dirname(__file__), "..", "..", "fonts", "NotoSansMyanmar-Regular.ttf")
+    font_path = os.path.join(
+        os.path.dirname(__file__), "..", "..", "fonts", "NotoSansMyanmar-Regular.ttf"
+    )
 
-    # Build arrivals rows
-    arrivals_rows = ""
+    from fpdf import FPDF
+
+    pdf = FPDF(orientation="P", unit="mm", format="A4")
+    pdf.set_auto_page_break(auto=True, margin=20)
+
+    # Register Myanmar font
+    pdf.add_font("Myanmar", "", font_path)
+
+    # ── Helper: write a cell using Helvetica for Latin, Myanmar font for Myanmar text ──
+    def write_mm_text(pdf, text: str, size: float = 10, style: str = "", align: str = "L"):
+        """Write a line of text that may contain Myanmar characters."""
+        pdf.set_font("Helvetica", style, size)
+        w = pdf.get_string_width(text)
+        pdf.cell(w, size * 0.35, text, new_x="LMARGIN", new_y="NEXT", align=align)
+
+    def mm_cell(pdf, w, h, text: str, align: str = "L", border: int = 0):
+        """Cell that switches font per character to handle Myanmar + Latin mixed text."""
+        pdf.set_font("Myanmar", "", h)
+        pdf.cell(w, h * 0.35, text, align=align, border=border)
+
+    # ── Page header ──
+    pdf.add_page()
+
+    # Title - Helvetica
+    pdf.set_font("Helvetica", "B", 18)
+    pdf.cell(0, 12, "Beans Inventory Report", align="C", new_x="LMARGIN", new_y="NEXT")
+
+    # Subtitle
+    pdf.set_font("Helvetica", "", 9)
+    period_text = f"Type: {data['report_type'].upper()}  |  Period: {data['start_date']} to {data['end_date']}"
+    pdf.cell(0, 6, period_text, align="C", new_x="LMARGIN", new_y="NEXT")
+
+    pdf.ln(4)
+
+    # ── Arrivals Summary ──
+    pdf.set_font("Helvetica", "B", 13)
+    pdf.set_fill_color(220, 240, 220)
+    pdf.cell(0, 8, "  Arrivals Summary", new_x="LMARGIN", new_y="NEXT", fill=True)
+    pdf.ln(2)
+
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(0, 6, f"Count: {data['arrivals']['count']}", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(1)
+
+    # Arrivals table header
+    col_w = [90, 30, 30]
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.set_fill_color(245, 245, 245)
+    pdf.cell(col_w[0], 6, "  Bean Type", border=1, fill=True)
+    pdf.cell(col_w[1], 6, "Bags", border=1, align="C", fill=True)
+    pdf.cell(col_w[2], 6, "Amount", border=1, align="R", fill=True)
+    pdf.ln()
+
+    # Arrivals data rows
+    pdf.set_font("Myanmar", "", 9)
     for item in data["arrivals"]["bags_by_type"]:
-        name = item['bean_type_name']
-        arrivals_rows += f"<tr><td>{name}</td><td>{item['quantity_bags']} bags</td></tr>\n"
+        name = item["bean_type_name"]
+        pdf.cell(col_w[0], 6, "  " + name, border=1)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.cell(col_w[1], 6, f"{item['quantity_bags']:,}", border=1, align="C")
+        pdf.cell(col_w[2], 6, "", border=1, align="R")
+        pdf.ln()
+        pdf.set_font("Myanmar", "", 9)
 
-    # Build sales rows
-    sales_rows = ""
+    # Arrivals total
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.cell(col_w[0] + col_w[1], 6, "  Total Cost", border="TB", align="L")
+    pdf.cell(col_w[2], 6, f"{data['arrivals']['total_cost']:,.0f}", border="TB", align="R")
+    pdf.ln(8)
+
+    # ── Sales Summary ──
+    pdf.set_font("Helvetica", "B", 13)
+    pdf.set_fill_color(220, 230, 245)
+    pdf.cell(0, 8, "  Sales Summary", new_x="LMARGIN", new_y="NEXT", fill=True)
+    pdf.ln(2)
+
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(0, 6, f"Count: {data['sales']['count']}", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(1)
+
+    # Sales table header
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.set_fill_color(245, 245, 245)
+    pdf.cell(col_w[0], 6, "  Bean Type", border=1, fill=True)
+    pdf.cell(col_w[1], 6, "Bags", border=1, align="C", fill=True)
+    pdf.cell(col_w[2], 6, "Revenue", border=1, align="R", fill=True)
+    pdf.ln()
+
+    # Sales data rows
+    pdf.set_font("Myanmar", "", 9)
     for item in data["sales"]["bags_by_type"]:
-        name = item['bean_type_name']
-        sales_rows += f"<tr><td>{name}</td><td>{item['quantity_bags']} bags</td></tr>\n"
+        name = item["bean_type_name"]
+        pdf.cell(col_w[0], 6, "  " + name, border=1)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.cell(col_w[1], 6, f"{item['quantity_bags']:,}", border=1, align="C")
+        pdf.cell(col_w[2], 6, "", border=1, align="R")
+        pdf.ln()
+        pdf.set_font("Myanmar", "", 9)
 
-    # Build adjustments rows
-    adjustments_rows = ""
+    # Sales total
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.cell(col_w[0] + col_w[1], 6, "  Total Revenue", border="TB", align="L")
+    pdf.cell(col_w[2], 6, f"{data['sales']['total_revenue']:,.0f}", border="TB", align="R")
+    pdf.ln(8)
+
+    # ── Adjustments Summary ──
+    pdf.set_font("Helvetica", "B", 13)
+    pdf.set_fill_color(255, 245, 220)
+    pdf.cell(0, 8, "  Adjustments Summary", new_x="LMARGIN", new_y="NEXT", fill=True)
+    pdf.ln(2)
+
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(0, 6, f"Count: {data['adjustments']['count']}", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(1)
+
+    # Adjustments table header
+    cols_adj = [90, 30, 30]
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.set_fill_color(245, 245, 245)
+    pdf.cell(cols_adj[0], 6, "  Bean Type", border=1, fill=True)
+    pdf.cell(cols_adj[1], 6, "Type", border=1, align="C", fill=True)
+    pdf.cell(cols_adj[2], 6, "Viss", border=1, align="R", fill=True)
+    pdf.ln()
+
+    # Adjustments data rows
+    pdf.set_font("Myanmar", "", 9)
     for item in data["adjustments"]["details"]:
+        name = item["bean_type_name"]
         sign = "+" if item["adjustment_type"] == "increase" else "-"
-        name = item['bean_type_name']
-        adjustments_rows += f"<tr><td>{name}</td><td>{sign}{item['quantity_viss']} Viss</td></tr>\n"
+        adj_type = "Increase" if item["adjustment_type"] == "increase" else "Decrease"
+        pdf.cell(cols_adj[0], 6, "  " + name, border=1)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.cell(cols_adj[1], 6, adj_type, border=1, align="C")
+        pdf.cell(cols_adj[2], 6, f"{sign}{item['quantity_viss']:,.2f}", border=1, align="R")
+        pdf.ln()
+        pdf.set_font("Myanmar", "", 9)
 
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <meta charset="UTF-8">
-    <style>
-        @font-face {{
-            font-family: 'Myanmar';
-            src: url('file://{os.path.abspath(font_path)}');
-        }}
-        body {{
-            font-family: 'Myanmar', sans-serif;
-            padding: 20px;
-            font-size: 12px;
-        }}
-        h1 {{
-            font-family: Helvetica, Arial, sans-serif;
-            text-align: center;
-            font-size: 24px;
-            margin-bottom: 5px;
-        }}
-        .subtitle {{
-            font-family: Helvetica, Arial, sans-serif;
-            text-align: center;
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 20px;
-        }}
-        h2 {{
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 16px;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 5px;
-        }}
-        .summary {{
-            font-family: Helvetica, Arial, sans-serif;
-            margin-bottom: 10px;
-        }}
-        table {{
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 10px;
-        }}
-        td {{
-            padding: 5px 10px;
-            border-bottom: 1px solid #eee;
-        }}
-        td:last-child {{
-            text-align: right;
-        }}
-        .total {{
-            font-weight: bold;
-            border-top: 2px solid #333;
-        }}
-    </style>
-    </head>
-    <body>
-        <h1>Beans Inventory Report</h1>
-        <div class="subtitle">Type: {data['report_type']} | Period: {data['start_date']} to {data['end_date']}</div>
+    # Adjustments total
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.cell(cols_adj[0] + cols_adj[1], 6, "  Total", border="TB", align="L")
+    pdf.cell(
+        cols_adj[2], 6, f"{data['adjustments']['total_quantity_viss']:,.2f} Viss",
+        border="TB", align="R",
+    )
+    pdf.ln(8)
 
-        <h2>Arrivals Summary</h2>
-        <div class="summary">Count: {data['arrivals']['count']}</div>
-        <table>
-            {arrivals_rows}
-            <tr class="total"><td>Total Cost</td><td>{data['arrivals']['total_cost']:,.0f}</td></tr>
-        </table>
-
-        <h2>Sales Summary</h2>
-        <div class="summary">Count: {data['sales']['count']}</div>
-        <table>
-            {sales_rows}
-            <tr class="total"><td>Total Revenue</td><td>{data['sales']['total_revenue']:,.0f}</td></tr>
-        </table>
-
-        <h2>Adjustments Summary</h2>
-        <div class="summary">Count: {data['adjustments']['count']}</div>
-        <table>
-            {adjustments_rows}
-            <tr class="total"><td>Total</td><td>{data['adjustments']['total_quantity_viss']} Viss</td></tr>
-        </table>
-    </body>
-    </html>
-    """
+    # ── Footer ──
+    pdf.set_font("Helvetica", "", 7)
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(0, 4, f"Generated on {date.today().isoformat()} | Beans Inventory Management System", align="C")
 
     output = io.BytesIO()
-    from weasyprint import HTML
-    HTML(string=html_content, base_url=os.path.dirname(font_path)).write_pdf(output)
+    pdf.output(output)
     output.seek(0)
 
     return StreamingResponse(
