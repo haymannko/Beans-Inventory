@@ -9,6 +9,7 @@ import {
   FiSave,
   FiX,
   FiEdit,
+  FiLock,
 } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import { useWeightMasterList } from '../hooks/useWeightMaster'
@@ -100,6 +101,7 @@ export default function BeanRecords() {
       return Number(localStorage.getItem(`beanRecords_startValue_${activeTab}`)) || 0
     } catch { return 0 }
   })
+  const [isStartLocked, setIsStartLocked] = useState(true)
 
   // Filters
   const [searchCustomer, setSearchCustomer] = useState('')
@@ -272,6 +274,7 @@ export default function BeanRecords() {
     setStartBags(Number(localStorage.getItem(`beanRecords_startBags_${newTab}`)) || 0)
     setStartViss(Number(localStorage.getItem(`beanRecords_startViss_${newTab}`)) || 0)
     setStartValue(Number(localStorage.getItem(`beanRecords_startValue_${newTab}`)) || 0)
+    setIsStartLocked(true)
     setActiveBeanType(newTab)
   }
 
@@ -567,39 +570,62 @@ export default function BeanRecords() {
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {/* Starting Balance Row */}
-              <tr className="bg-blue-50 dark:bg-blue-900/20 font-medium">
+              <tr className={`font-medium ${isStartLocked ? 'bg-gray-50 dark:bg-gray-800/50' : 'bg-blue-50 dark:bg-blue-900/20'}`}>
                 <td className="table-cell text-blue-700 dark:text-blue-300" colSpan={3}>
-                  စတင်ဘဏ္ဍာ (Starting Balance)
+                  <div className="flex items-center gap-2">
+                    <span>စတင်ဘဏ္ဍာ (Starting Balance)</span>
+                    {isStartLocked && (startBags !== 0 || startViss !== 0 || startValue !== 0) && (
+                      <FiLock className="w-3 h-3 text-gray-400" />
+                    )}
+                  </div>
                 </td>
                 <td className="table-cell px-1">
-                  <input
-                    type="number"
-                    value={startBags || ''}
-                    onChange={(e) => setStartBags(Number(e.target.value))}
-                    className="w-full bg-white dark:bg-gray-800 border border-blue-300 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="0"
-                  />
+                  {isStartLocked ? (
+                    <span className="block w-full text-right font-bold text-gray-700 dark:text-gray-300 px-2">
+                      {startBags || '-'}
+                    </span>
+                  ) : (
+                    <input
+                      type="number"
+                      value={startBags || ''}
+                      onChange={(e) => setStartBags(Number(e.target.value))}
+                      className="w-full bg-white dark:bg-gray-800 border border-blue-300 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="0"
+                    />
+                  )}
                 </td>
                 <td className="table-cell px-1">
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={startViss || ''}
-                    onChange={(e) => setStartViss(Number(e.target.value))}
-                    className="w-full bg-white dark:bg-gray-800 border border-blue-300 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="0"
-                  />
+                  {isStartLocked ? (
+                    <span className="block w-full text-right font-bold text-gray-700 dark:text-gray-300 px-2">
+                      {startViss || '-'}
+                    </span>
+                  ) : (
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={startViss || ''}
+                      onChange={(e) => setStartViss(Number(e.target.value))}
+                      className="w-full bg-white dark:bg-gray-800 border border-blue-300 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="0"
+                    />
+                  )}
                 </td>
                 <td className="table-cell"></td>
                 <td className="table-cell px-1">
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={startValue || ''}
-                    onChange={(e) => setStartValue(Number(e.target.value))}
-                    className="w-full bg-white dark:bg-gray-800 border border-blue-300 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="0"
-                  />
+                  {isStartLocked ? (
+                    <span className="block w-full text-right font-bold text-gray-700 dark:text-gray-300 px-2">
+                      {startValue || '-'}
+                    </span>
+                  ) : (
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={startValue || ''}
+                      onChange={(e) => setStartValue(Number(e.target.value))}
+                      className="w-full bg-white dark:bg-gray-800 border border-blue-300 rounded px-2 py-1 text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="0"
+                    />
+                  )}
                 </td>
                 <td className="table-cell text-right font-bold text-blue-700 dark:text-blue-300">
                   {formatNum((() => {
@@ -624,7 +650,40 @@ export default function BeanRecords() {
                 <td className="table-cell text-right font-bold text-blue-700 dark:text-blue-300">
                   {formatNum(startValue)}
                 </td>
-                <td className="table-cell"></td>
+                <td className="table-cell text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    {isStartLocked ? (
+                      <button
+                        onClick={() => setIsStartLocked(false)}
+                        className="p-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-500 hover:text-blue-600"
+                        title="Edit starting balance"
+                      >
+                        <FiEdit className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setIsStartLocked(true)}
+                        className="p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600"
+                        title="Lock starting balance"
+                      >
+                        <FiSave className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (confirm('Clear starting balance?')) {
+                          setStartBags(0)
+                          setStartViss(0)
+                          setStartValue(0)
+                        }
+                      }}
+                      className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-500 hover:text-red-600"
+                      title="Clear starting balance"
+                    >
+                      <FiTrash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </td>
               </tr>
 
               {/* Ledger rows */}
