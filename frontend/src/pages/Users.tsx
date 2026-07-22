@@ -11,6 +11,7 @@ export default function Users() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     username: '',
+    email: '',
     password: '',
     role: 'staff' as 'admin' | 'staff',
   })
@@ -26,7 +27,7 @@ export default function Users() {
   })
 
   const createMutation = useMutation({
-    mutationFn: async (data: { username: string; password: string; role: string }) => {
+    mutationFn: async (data: { username: string; email?: string; password: string; role: string }) => {
       const response = await apiClient.post('/users', data)
       return response.data
     },
@@ -34,7 +35,7 @@ export default function Users() {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       toast.success('User created successfully')
       setIsModalOpen(false)
-      setFormData({ username: '', password: '', role: 'staff' })
+      setFormData({ username: '', email: '', password: '', role: 'staff' })
     },
     onError: (error: unknown) => {
       const msg = error instanceof Error && 'response' in error
@@ -45,7 +46,7 @@ export default function Users() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: { username?: string; role?: string } }) => {
+    mutationFn: async ({ id, data }: { id: string; data: { username?: string; email?: string; role?: string } }) => {
       const response = await apiClient.put(`/users/${id}`, data)
       return response.data
     },
@@ -53,7 +54,7 @@ export default function Users() {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       toast.success('User updated successfully')
       setEditingId(null)
-      setFormData({ username: '', password: '', role: 'staff' })
+      setFormData({ username: '', email: '', password: '', role: 'staff' })
     },
     onError: (error: unknown) => {
       const msg = error instanceof Error && 'response' in error
@@ -107,6 +108,7 @@ export default function Users() {
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
                     <th className="table-header">Username</th>
+                    <th className="table-header">Email</th>
                     <th className="table-header">Role</th>
                     <th className="table-header">Created</th>
                     <th className="table-header text-right">Actions</th>
@@ -116,6 +118,7 @@ export default function Users() {
                   {users?.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="table-cell font-medium">{user.username}</td>
+                      <td className="table-cell text-gray-500">{user.email || '-'}</td>
                       <td className="table-cell">
                         <span className={`px-2 py-0.5 text-xs rounded-full ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                           {user.role}
@@ -124,7 +127,7 @@ export default function Users() {
                       <td className="table-cell text-gray-500">{new Date(user.created_at).toLocaleDateString()}</td>
                       <td className="table-cell text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => { setEditingId(user.id); setFormData({ username: user.username, password: '', role: user.role }) }} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600"><FiEdit2 className="w-4 h-4" /></button>
+                          <button onClick={() => { setEditingId(user.id); setFormData({ username: user.username, email: user.email || '', password: '', role: user.role }) }} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600"><FiEdit2 className="w-4 h-4" /></button>
                           <button onClick={() => { if (confirm('Are you sure?')) deleteMutation.mutate(user.id) }} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-red-600"><FiTrash2 className="w-4 h-4" /></button>
                         </div>
                       </td>
@@ -144,10 +147,11 @@ export default function Users() {
                       {user.role}
                     </span>
                   </div>
+                  <p className="text-xs text-gray-500">{user.email || 'No email'}</p>
                   <p className="text-xs text-gray-500">Created {new Date(user.created_at).toLocaleDateString()}</p>
                   <div className="flex gap-2 pt-2">
                     <button
-                      onClick={() => { setEditingId(user.id); setFormData({ username: user.username, password: '', role: user.role }) }}
+                      onClick={() => { setEditingId(user.id); setFormData({ username: user.username, email: user.email || '', password: '', role: user.role }) }}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                     >
                       <FiEdit2 className="w-4 h-4" /> Edit
@@ -167,10 +171,14 @@ export default function Users() {
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add User">
-        <form onSubmit={(e) => { e.preventDefault(); createMutation.mutate(formData) }} className="space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); createMutation.mutate({ ...formData, email: formData.email || undefined }) }} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username *</label>
             <input type="text" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} className="input-field" minLength={3} required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+            <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input-field" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password *</label>
@@ -191,10 +199,14 @@ export default function Users() {
       </Modal>
 
       <Modal isOpen={!!editingId} onClose={() => setEditingId(null)} title="Edit User">
-        <form onSubmit={(e) => { e.preventDefault(); if (editingId) updateMutation.mutate({ id: editingId, data: { username: formData.username, role: formData.role } }) }} className="space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); if (editingId) updateMutation.mutate({ id: editingId, data: { username: formData.username, email: formData.email || undefined, role: formData.role } }) }} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username *</label>
             <input type="text" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} className="input-field" minLength={3} required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+            <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input-field" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role *</label>

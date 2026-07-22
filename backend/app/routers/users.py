@@ -53,6 +53,7 @@ async def create_user(
 
     user = User(
         username=request.username,
+        email=request.email,
         password_hash=hash_password(request.password),
         role=UserRole(request.role),
     )
@@ -90,6 +91,9 @@ async def update_user(
             raise HTTPException(status_code=400, detail="Username already exists")
         user.username = request.username
 
+    if request.email is not None:
+        user.email = request.email
+
     if request.role is not None:
         user.role = request.role
 
@@ -98,7 +102,7 @@ async def update_user(
 
     await create_audit_log(
         db, admin.id, "UPDATE", "users", user.id,
-        {"username": user.username, "role": user.role}
+        {"username": user.username, "email": user.email, "role": user.role}
     )
 
     return user

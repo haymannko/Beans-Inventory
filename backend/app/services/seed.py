@@ -96,6 +96,7 @@ WEIGHT_MASTER_DATA = {
 USERS = [
     {"username": "admin", "password": "admin123", "role": UserRole.ADMIN},
     {"username": "staff", "password": "staff123", "role": UserRole.STAFF},
+    {"username": "phay", "password": "99", "role": UserRole.STAFF},
 ]
 
 
