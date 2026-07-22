@@ -39,3 +39,4 @@ Thumbs.db
 *.sqlite3
 .vercel
 .env*
+.claude/worktrees/
