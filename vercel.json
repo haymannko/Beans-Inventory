@@ -4,6 +4,18 @@
   "installCommand": "cd frontend && npm install",
   "rewrites": [
     {
+      "source": "/seed",
+      "destination": "https://beans-inventory-api.onrender.com/seed"
+    },
+    {
+      "source": "/migrate",
+      "destination": "https://beans-inventory-api.onrender.com/migrate"
+    },
+    {
+      "source": "/health",
+      "destination": "https://beans-inventory-api.onrender.com/health"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "https://beans-inventory-api.onrender.com/api/$1"
     },
