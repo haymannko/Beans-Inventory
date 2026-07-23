@@ -5,6 +5,7 @@ import logging
 from sqlalchemy import select
 
 from app.db.engine import async_session_factory
+from app.models.account import Account, AccountType
 from app.models.bean_type import BeanType
 from app.models.user import User, UserRole
 from app.models.weight_master import WeightMaster
@@ -151,6 +152,12 @@ async def seed_if_empty():
                 await _seed_weight_master(session)
             except Exception:
                 pass
+
+            # Seed chart of accounts for existing DBs
+            try:
+                await _seed_accounts(session)
+            except Exception:
+                pass
             return
 
         logger.info("Seeding database...")
@@ -183,8 +190,22 @@ async def seed_if_empty():
             wm = WeightMaster(bean_name=bean_name, weight=weight)
             session.add(wm)
 
+        # Seed chart of accounts
+        for acct_data in CHART_OF_ACCOUNTS:
+            account = Account(
+                code=acct_data["code"],
+                name=acct_data["name"],
+                type=acct_data["type"],
+                description=acct_data["description"],
+            )
+            session.add(account)
+
         await session.commit()
-        logger.info(f"Seeded {len(USERS)} users, {len(BEAN_TYPES)} bean types, and {len(WEIGHT_MASTER_DATA)} weight master records")
+        logger.info(
+            f"Seeded {len(USERS)} users, {len(BEAN_TYPES)} bean types, "
+            f"{len(WEIGHT_MASTER_DATA)} weight master records, and "
+            f"{len(CHART_OF_ACCOUNTS)} chart of accounts"
+        )
 
 
 async def _seed_bean_types(session):
@@ -219,3 +240,61 @@ async def _seed_weight_master(session):
     if count > 0:
         await session.commit()
         logger.info(f"Seeded {count} weight master records")
+
+
+# ─── Chart of Accounts ─────────────────────────────────────────────
+
+CHART_OF_ACCOUNTS = [
+    # Assets (1000-1999)
+    {"code": "1000", "name": "Assets", "type": AccountType.ASSET, "description": "Total assets"},
+    {"code": "1100", "name": "Cash & Bank", "type": AccountType.ASSET, "description": "Cash on hand and bank accounts"},
+    {"code": "1110", "name": "Cash on Hand", "type": AccountType.ASSET, "description": "Physical cash"},
+    {"code": "1120", "name": "Bank Account", "type": AccountType.ASSET, "description": "Bank checking account"},
+    {"code": "1200", "name": "Accounts Receivable", "type": AccountType.ASSET, "description": "Money owed by customers"},
+    {"code": "1300", "name": "Inventory", "type": AccountType.ASSET, "description": "Bean stock inventory"},
+    {"code": "1400", "name": "Prepaid Expenses", "type": AccountType.ASSET, "description": "Prepaid expenses"},
+
+    # Liabilities (2000-2999)
+    {"code": "2000", "name": "Liabilities", "type": AccountType.LIABILITY, "description": "Total liabilities"},
+    {"code": "2100", "name": "Loans Payable", "type": AccountType.LIABILITY, "description": "Bank and other loans"},
+    {"code": "2200", "name": "Accounts Payable", "type": AccountType.LIABILITY, "description": "Money owed to suppliers"},
+    {"code": "2300", "name": "Accrued Expenses", "type": AccountType.LIABILITY, "description": "Accrued liabilities"},
+
+    # Equity (3000-3999)
+    {"code": "3000", "name": "Equity", "type": AccountType.EQUITY, "description": "Total equity"},
+    {"code": "3100", "name": "Owner's Capital", "type": AccountType.EQUITY, "description": "Owner capital contributions"},
+    {"code": "3200", "name": "Retained Earnings", "type": AccountType.EQUITY, "description": "Accumulated retained earnings"},
+
+    # Revenue (4000-4999)
+    {"code": "4000", "name": "Revenue", "type": AccountType.REVENUE, "description": "Total revenue"},
+    {"code": "4100", "name": "Sales Revenue", "type": AccountType.REVENUE, "description": "Income from bean sales"},
+    {"code": "4200", "name": "Service Revenue", "type": AccountType.REVENUE, "description": "Income from services"},
+
+    # Expenses (5000-5999)
+    {"code": "5000", "name": "Expenses", "type": AccountType.EXPENSE, "description": "Total expenses"},
+    {"code": "5100", "name": "Cost of Goods Sold", "type": AccountType.EXPENSE, "description": "COGS - purchase cost of beans"},
+    {"code": "5200", "name": "Transport Expense", "type": AccountType.EXPENSE, "description": "Transportation costs"},
+    {"code": "5300", "name": "Labor Expense", "type": AccountType.EXPENSE, "description": "Labor and wages"},
+    {"code": "5400", "name": "Rent Expense", "type": AccountType.EXPENSE, "description": "Rental costs"},
+    {"code": "5500", "name": "Utilities Expense", "type": AccountType.EXPENSE, "description": "Electricity, water, etc."},
+    {"code": "5600", "name": "Administrative Expense", "type": AccountType.EXPENSE, "description": "Office and admin costs"},
+]
+
+
+async def _seed_accounts(session):
+    """Seed default chart of accounts if empty."""
+    result = await session.execute(select(Account).limit(1))
+    if result.scalar_one_or_none() is not None:
+        return  # Already seeded
+
+    for acct_data in CHART_OF_ACCOUNTS:
+        account = Account(
+            code=acct_data["code"],
+            name=acct_data["name"],
+            type=acct_data["type"],
+            description=acct_data["description"],
+        )
+        session.add(account)
+
+    await session.commit()
+    logger.info(f"Seeded {len(CHART_OF_ACCOUNTS)} chart of accounts")

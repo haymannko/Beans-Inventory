@@ -15,6 +15,7 @@ from app.routers import (
     bean_types,
     customers,
     dashboard,
+    financial,
     purchase_orders,
     reports,
     sales,
@@ -67,6 +68,7 @@ app.include_router(customers.router)
 app.include_router(warehouses.router)
 app.include_router(transfers.router)
 app.include_router(backup.router)
+app.include_router(financial.router)
 
 
 @app.get("/", include_in_schema=False)
@@ -99,18 +101,24 @@ async def run_migrations():
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
-        # Verify weight_master table exists
+        # Verify tables exist
         from sqlalchemy import text
+        tables_to_check = [
+            "weight_master", "accounts", "journal_entries",
+            "journal_entry_lines", "cash_book_entries",
+        ]
+        table_status = {}
         async with engine.begin() as conn:
-            result = await conn.execute(
-                text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'weight_master')")
-            )
-            table_exists = result.scalar()
+            for tbl in tables_to_check:
+                result = await conn.execute(
+                    text(f"SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = '{tbl}')")
+                )
+                table_status[tbl] = "exists" if result.scalar() else "created"
 
         return {
             "status": "ok",
             "message": "Migrations completed",
-            "weight_master_table": "exists" if table_exists else "created"
+            "tables": table_status,
         }
     except Exception as e:
         logger.error(f"Migration error: {e}")

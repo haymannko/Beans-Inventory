@@ -21,6 +21,12 @@ import Suppliers from './pages/Suppliers'
 import Customers from './pages/Customers'
 import Warehouses from './pages/Warehouses'
 import Transfers from './pages/Transfers'
+import ChartOfAccounts from './pages/ChartOfAccounts'
+import JournalEntries from './pages/JournalEntries'
+import CashBook from './pages/CashBook'
+import TrialBalance from './pages/TrialBalance'
+import FinancialReports from './pages/FinancialReports'
+import Ledger from './pages/Ledger'
 
 export default function App() {
   return (
@@ -46,6 +52,12 @@ export default function App() {
           <Route path="users" element={<ProtectedRoute requiredRole="admin"><Users /></ProtectedRoute>} />
           <Route path="settings" element={<Settings />} />
           <Route path="bouncher" element={<Boucher />} />
+          <Route path="chart-of-accounts" element={<ChartOfAccounts />} />
+          <Route path="journal-entries" element={<JournalEntries />} />
+          <Route path="cash-book" element={<CashBook />} />
+          <Route path="trial-balance" element={<TrialBalance />} />
+          <Route path="financial-reports" element={<FinancialReports />} />
+          <Route path="ledger" element={<Ledger />} />
         </Route>
       </Routes>
     </ErrorBoundary>

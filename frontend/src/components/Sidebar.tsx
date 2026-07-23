@@ -18,6 +18,10 @@ import {
   FiUser,
   FiHome,
   FiRepeat,
+  FiBook,
+  FiBookOpen,
+  FiTrendingUp,
+  FiClipboard,
 } from 'react-icons/fi'
 
 const navigation = [
@@ -35,6 +39,13 @@ const navigation = [
   { name: 'Storage', href: '/storage', icon: FiArchive },
   { name: 'Adjustments', href: '/adjustments', icon: FiSliders },
   { name: 'Reports', href: '/reports', icon: FiFileText },
+  { name: '── Accounting ──', href: '#', icon: FiBook },
+  { name: 'Chart of Accounts', href: '/chart-of-accounts', icon: FiBook },
+  { name: 'Journal Entries', href: '/journal-entries', icon: FiBookOpen },
+  { name: 'Cash Book', href: '/cash-book', icon: FiDollarSign },
+  { name: 'General Ledger', href: '/ledger', icon: FiClipboard },
+  { name: 'Trial Balance', href: '/trial-balance', icon: FiTrendingUp },
+  { name: 'Financial Reports', href: '/financial-reports', icon: FiFileText },
   { name: 'Users', href: '/users', icon: FiUsers },
   { name: 'Settings', href: '/settings', icon: FiSettings },
   { name: 'Voucher', href: '/bouncher', icon: FiShield },
@@ -77,24 +88,34 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       </div>
 
       <nav className="p-4 space-y-1 overflow-y-auto flex-1">
-        {filteredNavigation.map((item) => (
-          <NavLink
-            key={item.name}
-            to={item.href}
-            end={item.href === '/'}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300'
-                  : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
-              }`
-            }
-            onClick={onClose}
-          >
-            <item.icon className="w-5 h-5" />
-            {item.name}
-          </NavLink>
-        ))}
+        {filteredNavigation.map((item) =>
+          item.href === '#' ? (
+            <div
+              key={item.name}
+              className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider"
+            >
+              <item.icon className="w-3.5 h-3.5" />
+              {item.name.replace(/[─]/g, '').trim()}
+            </div>
+          ) : (
+            <NavLink
+              key={item.name}
+              to={item.href}
+              end={item.href === '/'}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300'
+                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+                }`
+              }
+              onClick={onClose}
+            >
+              <item.icon className="w-5 h-5" />
+              {item.name}
+            </NavLink>
+          )
+        )}
       </nav>
     </aside>
   )

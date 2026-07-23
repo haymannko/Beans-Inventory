@@ -561,3 +561,237 @@ export interface TransferFilters {
   skip?: number
   limit?: number
 }
+
+// ─── Financial / Accounting ─────────────────────────────────────────
+
+export type AccountType = 'asset' | 'liability' | 'equity' | 'revenue' | 'expense'
+
+export interface Account {
+  id: string
+  code: string
+  name: string
+  type: AccountType
+  description: string | null
+  is_active: boolean
+  parent_code: string | null
+  created_at: string
+  updated_at: string
+  balance: number
+}
+
+export interface CreateAccountRequest {
+  code: string
+  name: string
+  type: AccountType
+  description?: string
+  parent_code?: string
+}
+
+export interface UpdateAccountRequest {
+  name?: string
+  type?: AccountType
+  description?: string
+  is_active?: boolean
+  parent_code?: string
+}
+
+export interface AccountFilters {
+  account_type?: string
+  search?: string
+  active_only?: boolean
+  skip?: number
+  limit?: number
+}
+
+// Journal Entries
+
+export interface JournalEntryLine {
+  id: string
+  journal_entry_id: string
+  account_id: string
+  account_code: string | null
+  account_name: string | null
+  debit: number
+  credit: number
+  description: string | null
+}
+
+export interface JournalEntry {
+  id: string
+  entry_number: string
+  entry_date: string
+  description: string
+  entry_type: string | null
+  reference_type: string | null
+  reference_id: string | null
+  is_posted: boolean
+  created_by: string
+  created_at: string
+  updated_at: string
+  lines: JournalEntryLine[]
+}
+
+export interface CreateJournalEntryLineRequest {
+  account_id: string
+  debit?: number
+  credit?: number
+  description?: string
+}
+
+export interface CreateJournalEntryRequest {
+  entry_date: string
+  description: string
+  entry_type?: string
+  reference_type?: string
+  reference_id?: string
+  lines: CreateJournalEntryLineRequest[]
+}
+
+export interface UpdateJournalEntryLineRequest {
+  account_id?: string
+  debit?: number
+  credit?: number
+  description?: string
+}
+
+export interface UpdateJournalEntryRequest {
+  entry_date?: string
+  description?: string
+  lines?: UpdateJournalEntryLineRequest[]
+}
+
+export interface JournalEntryFilters {
+  start_date?: string
+  end_date?: string
+  entry_type?: string
+  account_id?: string
+  search?: string
+  skip?: number
+  limit?: number
+}
+
+// Cash Book
+
+export interface CashBookEntry {
+  id: string
+  entry_number: string
+  transaction_date: string
+  transaction_type: 'receipt' | 'payment'
+  amount: number
+  description: string
+  counterparty: string | null
+  payment_method: string | null
+  reference_type: string | null
+  reference_id: string | null
+  notes: string | null
+  created_by: string
+  created_at: string
+}
+
+export interface CreateCashBookEntryRequest {
+  transaction_date: string
+  transaction_type: 'receipt' | 'payment'
+  amount: number
+  description: string
+  counterparty?: string
+  payment_method?: string
+  reference_type?: string
+  reference_id?: string
+  notes?: string
+}
+
+export interface UpdateCashBookEntryRequest {
+  transaction_date?: string
+  transaction_type?: 'receipt' | 'payment'
+  amount?: number
+  description?: string
+  counterparty?: string
+  payment_method?: string
+  notes?: string
+}
+
+export interface CashBookFilters {
+  start_date?: string
+  end_date?: string
+  transaction_type?: string
+  search?: string
+  skip?: number
+  limit?: number
+}
+
+export interface CashBookBalance {
+  opening_balance: number
+  total_receipts: number
+  total_payments: number
+  closing_balance: number
+}
+
+// Trial Balance
+
+export interface TrialBalanceRow {
+  account_id: string
+  account_code: string
+  account_name: string
+  account_type: string
+  total_debit: number
+  total_credit: number
+  balance: number
+}
+
+export interface TrialBalanceResponse {
+  as_of_date: string
+  rows: TrialBalanceRow[]
+  total_debit: number
+  total_credit: number
+}
+
+// Financial Reports
+
+export interface IncomeStatementRow {
+  account_id: string
+  account_code: string
+  account_name: string
+  balance: number
+}
+
+export interface IncomeStatementResponse {
+  start_date: string
+  end_date: string
+  revenues: IncomeStatementRow[]
+  total_revenue: number
+  expenses: IncomeStatementRow[]
+  total_expense: number
+  net_income: number
+}
+
+export interface BalanceSheetRow {
+  account_id: string
+  account_code: string
+  account_name: string
+  balance: number
+}
+
+export interface BalanceSheetResponse {
+  as_of_date: string
+  assets: BalanceSheetRow[]
+  total_assets: number
+  liabilities: BalanceSheetRow[]
+  total_liabilities: number
+  equity: BalanceSheetRow[]
+  total_equity: number
+}
+
+// AR / AP
+
+export interface ReceivablePayableItem {
+  account_id: string
+  account_code: string
+  account_name: string
+  outstanding_balance: number
+  recent_transactions: {
+    id: string
+    entry_number: string
+    entry_date: string
+    description: string
+  }[]
+}
