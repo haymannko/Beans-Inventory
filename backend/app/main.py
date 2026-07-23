@@ -10,9 +10,11 @@ from app.routers import (
     arrivals,
     audit_logs,
     auth,
+    backup,
     bean_records,
     bean_types,
     dashboard,
+    purchase_orders,
     reports,
     sales,
     storages,
@@ -55,6 +57,8 @@ app.include_router(reports.router)
 app.include_router(audit_logs.router)
 app.include_router(weight_master.router)
 app.include_router(bean_records.router)
+app.include_router(purchase_orders.router)
+app.include_router(backup.router)
 
 
 @app.get("/", include_in_schema=False)

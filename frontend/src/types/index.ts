@@ -277,3 +277,89 @@ export interface UpdateBeanRecordRequest {
   viss?: number
   price?: number
 }
+
+// ─── Purchase Orders ─────────────────────────────────────────────────────────
+
+export interface PurchaseOrderItem {
+  id: string
+  purchase_order_id: string
+  bean_type_id: string
+  bean_type_name: string | null
+  quantity_bags: number
+  unit_price: number
+  total_price: number
+  received_quantity_bags: number
+  notes: string | null
+}
+
+export type PurchaseOrderStatus = 'draft' | 'approved' | 'ordered' | 'received' | 'cancelled'
+
+export interface PurchaseOrder {
+  id: string
+  po_number: string
+  supplier_name: string
+  status: PurchaseOrderStatus
+  order_date: string
+  expected_delivery_date: string | null
+  notes: string | null
+  created_by: string
+  created_at: string
+  updated_at: string
+  items: PurchaseOrderItem[]
+}
+
+export interface CreatePurchaseOrderItemRequest {
+  bean_type_id: string
+  quantity_bags: number
+  unit_price: number
+  total_price?: number
+  notes?: string
+}
+
+export interface CreatePurchaseOrderRequest {
+  supplier_name: string
+  status?: string
+  order_date: string
+  expected_delivery_date?: string
+  notes?: string
+  items: CreatePurchaseOrderItemRequest[]
+}
+
+export interface UpdatePurchaseOrderItemRequest {
+  bean_type_id?: string
+  quantity_bags?: number
+  unit_price?: number
+  total_price?: number
+  notes?: string
+}
+
+export interface UpdatePurchaseOrderRequest {
+  supplier_name?: string
+  order_date?: string
+  expected_delivery_date?: string
+  notes?: string
+  items?: UpdatePurchaseOrderItemRequest[]
+}
+
+export interface PurchaseOrderStatusUpdate {
+  status: PurchaseOrderStatus
+}
+
+export interface ReceiveItemRequest {
+  item_id: string
+  received_quantity_bags: number
+}
+
+export interface ReceiveItemsRequest {
+  items: ReceiveItemRequest[]
+}
+
+export interface PurchaseOrderFilters {
+  status?: string
+  supplier?: string
+  start_date?: string
+  end_date?: string
+  search?: string
+  skip?: number
+  limit?: number
+}
