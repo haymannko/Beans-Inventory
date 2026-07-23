@@ -9,6 +9,7 @@ class StorageCreate(BaseModel):
     quantity_bags: int = Field(default=0, ge=0)
     quantity: float = Field(..., ge=0)
     warehouse_name: str | None = None
+    warehouse_id: str | None = None
     storage_date: date
     notes: str | None = None
 
@@ -18,6 +19,7 @@ class StorageUpdate(BaseModel):
     quantity_bags: int | None = Field(None, ge=0)
     quantity: float | None = Field(None, ge=0)
     warehouse_name: str | None = None
+    warehouse_id: str | None = None
     storage_date: date | None = None
     notes: str | None = None
 
@@ -29,6 +31,8 @@ class StorageResponse(BaseModel):
     quantity_bags: int
     quantity: float
     warehouse_name: str | None
+    warehouse_id: str | None = None
+    warehouse_name_resolved: str | None = None
     storage_date: date
     notes: str | None
     created_by: uuid.UUID

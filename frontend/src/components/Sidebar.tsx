@@ -16,6 +16,8 @@ import {
   FiDatabase,
   FiShoppingCart,
   FiUser,
+  FiHome,
+  FiRepeat,
 } from 'react-icons/fi'
 
 const navigation = [
@@ -24,6 +26,8 @@ const navigation = [
   { name: 'Purchase Orders', href: '/purchase-orders', icon: FiShoppingCart },
   { name: 'Suppliers', href: '/suppliers', icon: FiUsers },
   { name: 'Customers', href: '/customers', icon: FiUser },
+  { name: 'Warehouses', href: '/warehouses', icon: FiHome },
+  { name: 'Transfers', href: '/transfers', icon: FiRepeat },
   { name: 'အသားအလေးချိန်စာရင်း', href: '/weight-master', icon: FiList },
   { name: 'ပဲစာရင်း', href: '/bean-records', icon: FiDatabase },
   { name: 'Arrivals', href: '/arrivals', icon: FiTruck },

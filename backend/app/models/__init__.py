@@ -11,6 +11,8 @@ from app.models.bean_record import BeanRecord
 from app.models.purchase_order import PurchaseOrder, PurchaseOrderItem
 from app.models.supplier import Supplier
 from app.models.customer import Customer
+from app.models.warehouse import Warehouse
+from app.models.warehouse_transfer import WarehouseTransfer
 
 __all__ = [
     "Base",
@@ -27,4 +29,6 @@ __all__ = [
     "PurchaseOrderItem",
     "Supplier",
     "Customer",
+    "Warehouse",
+    "WarehouseTransfer",
 ]

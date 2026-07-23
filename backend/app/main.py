@@ -20,7 +20,9 @@ from app.routers import (
     sales,
     storages,
     suppliers,
+    transfers,
     users,
+    warehouses,
     weight_master,
 )
 
@@ -62,6 +64,8 @@ app.include_router(bean_records.router)
 app.include_router(purchase_orders.router)
 app.include_router(suppliers.router)
 app.include_router(customers.router)
+app.include_router(warehouses.router)
+app.include_router(transfers.router)
 app.include_router(backup.router)
 
 
@@ -154,6 +158,9 @@ async def _ensure_columns():
         ],
         "sales": [
             ("customer_id", "VARCHAR(36)"),
+        ],
+        "storages": [
+            ("warehouse_id", "VARCHAR(36)"),
         ],
     }
 

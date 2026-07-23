@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStorages, useCreateStorage, useUpdateStorage, useDeleteStorage } from '../hooks/useStorages'
 import { useBeanTypes } from '../hooks/useBeanTypes'
+import { useWarehouses } from '../hooks/useWarehouses'
 import Modal from '../components/Modal'
 import toast from 'react-hot-toast'
 import { FiPlus, FiArchive, FiEdit2, FiTrash2 } from 'react-icons/fi'
@@ -14,12 +15,14 @@ export default function Storages() {
     quantity_bags: '',
     quantity: '',
     warehouse_name: '',
+    warehouse_id: '',
     storage_date: new Date().toISOString().split('T')[0],
     notes: '',
   })
 
   const { data: storages, isLoading } = useStorages()
   const { data: beanTypes } = useBeanTypes()
+  const { data: warehouses } = useWarehouses({ active_only: true })
   const createMutation = useCreateStorage()
   const updateMutation = useUpdateStorage()
   const deleteMutation = useDeleteStorage()
@@ -30,6 +33,7 @@ export default function Storages() {
       quantity_bags: '',
       quantity: '',
       warehouse_name: '',
+      warehouse_id: '',
       storage_date: new Date().toISOString().split('T')[0],
       notes: '',
     })
@@ -56,6 +60,7 @@ export default function Storages() {
       quantity_bags: String(storage.quantity_bags),
       quantity: String(storage.quantity),
       warehouse_name: storage.warehouse_name || '',
+      warehouse_id: storage.warehouse_id || '',
       storage_date: storage.storage_date,
       notes: storage.notes || '',
     })
@@ -69,6 +74,7 @@ export default function Storages() {
         quantity_bags: parseInt(formData.quantity_bags) || 0,
         quantity: parseFloat(formData.quantity),
         warehouse_name: formData.warehouse_name || undefined,
+        warehouse_id: formData.warehouse_id || undefined,
         storage_date: formData.storage_date,
         notes: formData.notes || undefined,
       })
@@ -95,6 +101,7 @@ export default function Storages() {
           quantity_bags: parseInt(formData.quantity_bags) || 0,
           quantity: parseFloat(formData.quantity),
           warehouse_name: formData.warehouse_name || undefined,
+          warehouse_id: formData.warehouse_id || undefined,
           storage_date: formData.storage_date,
           notes: formData.notes || undefined,
         },
@@ -176,10 +183,31 @@ export default function Storages() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Warehouse Name
+            Warehouse
           </label>
+          <select
+            value={formData.warehouse_id}
+            onChange={(e) => {
+              const whId = e.target.value
+              const wh = warehouses?.find((w) => w.id === whId)
+              setFormData({
+                ...formData,
+                warehouse_id: whId,
+                warehouse_name: wh?.name || formData.warehouse_name,
+              })
+            }}
+            className="input-field mb-2"
+          >
+            <option value="">-- Select warehouse --</option>
+            {warehouses?.map((w) => (
+              <option key={w.id} value={w.id}>
+                {w.name} {w.location ? `(${w.location})` : ''}
+              </option>
+            ))}
+          </select>
           <input
             type="text"
+            placeholder="Or type a custom warehouse name"
             value={formData.warehouse_name}
             onChange={(e) => setFormData({ ...formData, warehouse_name: e.target.value })}
             className="input-field"

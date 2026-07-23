@@ -54,6 +54,8 @@ export interface Storage {
   quantity_bags: number
   quantity: number
   warehouse_name: string | null
+  warehouse_id: string | null
+  warehouse_name_resolved?: string | null
   storage_date: string
   notes: string | null
   created_by: string
@@ -215,6 +217,7 @@ export interface CreateStorageRequest {
   quantity_bags: number
   quantity: number
   warehouse_name?: string
+  warehouse_id?: string
   storage_date: string
   notes?: string
 }
@@ -224,6 +227,7 @@ export interface UpdateStorageRequest {
   quantity_bags?: number
   quantity?: number
   warehouse_name?: string
+  warehouse_id?: string
   storage_date?: string
   notes?: string
 }
@@ -471,6 +475,89 @@ export interface UpdateCustomerRequest {
 export interface CustomerFilters {
   search?: string
   active_only?: boolean
+  skip?: number
+  limit?: number
+}
+
+// ─── Warehouses & Transfers ─────────────────────────────────────────────────
+
+export interface Warehouse {
+  id: string
+  name: string
+  location: string | null
+  contact_person: string | null
+  phone: string | null
+  notes: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  storage_count: number
+  total_bags: number
+}
+
+export interface CreateWarehouseRequest {
+  name: string
+  location?: string
+  contact_person?: string
+  phone?: string
+  notes?: string
+}
+
+export interface UpdateWarehouseRequest {
+  name?: string
+  location?: string
+  contact_person?: string
+  phone?: string
+  notes?: string
+  is_active?: boolean
+}
+
+export interface WarehouseFilters {
+  search?: string
+  active_only?: boolean
+  skip?: number
+  limit?: number
+}
+
+export interface WarehouseInventoryItem {
+  bean_type_id: string
+  bean_type_name: string
+  quantity_bags: number
+  quantity: number
+}
+
+export interface WarehouseTransfer {
+  id: string
+  from_warehouse_id: string
+  from_warehouse_name: string | null
+  to_warehouse_id: string
+  to_warehouse_name: string | null
+  bean_type_id: string
+  bean_type_name: string | null
+  quantity_bags: number
+  quantity: number
+  transfer_date: string
+  notes: string | null
+  created_by: string
+  created_at: string
+}
+
+export interface CreateTransferRequest {
+  from_warehouse_id: string
+  to_warehouse_id: string
+  bean_type_id: string
+  quantity_bags?: number
+  quantity?: number
+  transfer_date: string
+  notes?: string
+}
+
+export interface TransferFilters {
+  from_warehouse_id?: string
+  to_warehouse_id?: string
+  bean_type_id?: string
+  start_date?: string
+  end_date?: string
   skip?: number
   limit?: number
 }

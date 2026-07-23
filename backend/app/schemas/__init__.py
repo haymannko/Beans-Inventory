@@ -24,6 +24,14 @@ from app.schemas.customer import (
     CustomerUpdate,
     CustomerResponse,
 )
+from app.schemas.warehouse import (
+    WarehouseCreate,
+    WarehouseUpdate,
+    WarehouseResponse,
+    TransferCreate,
+    TransferResponse,
+    WarehouseInventoryItem,
+)
 
 __all__ = [
     "Token", "TokenData", "LoginRequest", "ChangePasswordRequest",
@@ -46,4 +54,10 @@ __all__ = [
     "CustomerCreate",
     "CustomerUpdate",
     "CustomerResponse",
+    "WarehouseCreate",
+    "WarehouseUpdate",
+    "WarehouseResponse",
+    "TransferCreate",
+    "TransferResponse",
+    "WarehouseInventoryItem",
 ]

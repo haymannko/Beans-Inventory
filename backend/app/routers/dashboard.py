@@ -12,6 +12,8 @@ from app.models.sale import Sale
 from app.models.stock_adjustment import StockAdjustment
 from app.models.storage import Storage
 from app.models.user import User
+from app.models.warehouse import Warehouse
+from app.models.warehouse_transfer import WarehouseTransfer
 from app.schemas.dashboard import DashboardResponse, StockByBeanType
 from app.services.inventory_service import get_all_stocks, get_all_stocks_bags, get_today_arrivals, get_today_arrivals_bags, get_today_sales, get_today_sales_bags
 
@@ -41,17 +43,53 @@ async def get_dashboard(
     )
     storage_by_type = {row.bean_type_id: int(row.total_bags) for row in storage_result.fetchall()}
 
-    # Get storage bags per warehouse
-    warehouse_result = await db.execute(
+    # Get storage bags per warehouse (from warehouse_id FK when available)
+    wh_storage_result = await db.execute(
+        select(
+            Storage.warehouse_id,
+            func.coalesce(func.sum(Storage.quantity_bags), 0).label("total_bags"),
+        ).where(Storage.warehouse_id.isnot(None))
+        .group_by(Storage.warehouse_id)
+    )
+    wh_bags = {row.warehouse_id: int(row.total_bags) for row in wh_storage_result.fetchall()}
+
+    # Get storage from warehouse_name fallback
+    wh_name_result = await db.execute(
         select(
             func.coalesce(Storage.warehouse_name, "Unknown").label("warehouse_name"),
             func.coalesce(func.sum(Storage.quantity_bags), 0).label("total_bags"),
-        ).group_by(Storage.warehouse_name)
+        ).where(Storage.warehouse_id.is_(None))
+        .group_by(Storage.warehouse_name)
     )
-    storage_by_warehouse = [
-        {"warehouse_name": row.warehouse_name, "quantity_bags": int(row.total_bags)}
-        for row in warehouse_result.fetchall()
-    ]
+    name_bags = {row.warehouse_name: int(row.total_bags) for row in wh_name_result.fetchall()}
+
+    # Build warehouse list — start with named warehouses from Warehouse table
+    storage_by_warehouse = []
+    wh_result = await db.execute(
+        select(Warehouse.id, Warehouse.name).where(Warehouse.is_active == True)
+    )
+    for wh_id, wh_name in wh_result.fetchall():
+        bags = wh_bags.get(wh_id, 0)
+        # Add transfer contributions
+        in_result = await db.execute(
+            select(func.coalesce(func.sum(WarehouseTransfer.quantity_bags), 0)).where(
+                WarehouseTransfer.to_warehouse_id == wh_id
+            )
+        )
+        bags += int(in_result.scalar() or 0)
+        out_result = await db.execute(
+            select(func.coalesce(func.sum(WarehouseTransfer.quantity_bags), 0)).where(
+                WarehouseTransfer.from_warehouse_id == wh_id
+            )
+        )
+        bags -= int(out_result.scalar() or 0)
+        if bags > 0 or wh_name in name_bags:
+            storage_by_warehouse.append({"warehouse_name": wh_name, "quantity_bags": max(0, bags)})
+
+    # Add any remaining free-text warehouse names not linked to a Warehouse record
+    for name, bags in name_bags.items():
+        if not any(w["warehouse_name"] == name for w in storage_by_warehouse):
+            storage_by_warehouse.append({"warehouse_name": name, "quantity_bags": bags})
 
     # Total bean types
     total_bean_types = len(bean_types)

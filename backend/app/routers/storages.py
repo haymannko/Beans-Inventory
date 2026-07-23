@@ -10,6 +10,7 @@ from app.deps import get_current_user
 from app.models.bean_type import BeanType
 from app.models.storage import Storage
 from app.models.user import User
+from app.models.warehouse import Warehouse
 from app.schemas.storage import StorageCreate, StorageResponse, StorageUpdate
 from app.services.audit_service import create_audit_log
 
@@ -40,11 +41,20 @@ async def list_storages(
     result = await db.execute(query)
     storages = result.scalars().all()
 
-    # Enrich with bean type names
+    # Resolve warehouse names
+    warehouse_cache: dict[str, str] = {}
+    if any(s.warehouse_id for s in storages):
+        wh_ids = [s.warehouse_id for s in storages if s.warehouse_id]
+        wh_result = await db.execute(
+            select(Warehouse.id, Warehouse.name).where(Warehouse.id.in_(wh_ids))
+        )
+        warehouse_cache = {row[0]: row[1] for row in wh_result.fetchall()}
+
     enriched = []
     for storage in storages:
         bt_result = await db.execute(select(BeanType.name).where(BeanType.id == storage.bean_type_id))
         bt_name = bt_result.scalar_one_or_none()
+        resolved_wh = warehouse_cache.get(storage.warehouse_id) if storage.warehouse_id else None
         enriched.append(StorageResponse(
             id=storage.id,
             bean_type_id=storage.bean_type_id,
@@ -52,6 +62,8 @@ async def list_storages(
             quantity_bags=storage.quantity_bags,
             quantity=float(storage.quantity),
             warehouse_name=storage.warehouse_name,
+            warehouse_id=storage.warehouse_id,
+            warehouse_name_resolved=resolved_wh,
             storage_date=storage.storage_date,
             notes=storage.notes,
             created_by=storage.created_by,
@@ -75,11 +87,22 @@ async def create_storage(
     if bean_type is None:
         raise HTTPException(status_code=404, detail="Bean type not found")
 
+    # Resolve warehouse name if warehouse_id provided
+    resolved_wh_name = request.warehouse_name
+    if request.warehouse_id:
+        wh_result = await db.execute(
+            select(Warehouse).where(Warehouse.id == request.warehouse_id)
+        )
+        warehouse = wh_result.scalar_one_or_none()
+        if warehouse:
+            resolved_wh_name = warehouse.name
+
     storage = Storage(
         bean_type_id=str(request.bean_type_id),
         quantity_bags=request.quantity_bags,
         quantity=request.quantity,
-        warehouse_name=request.warehouse_name,
+        warehouse_name=resolved_wh_name or request.warehouse_name,
+        warehouse_id=request.warehouse_id,
         storage_date=request.storage_date,
         notes=request.notes,
         created_by=str(user.id),
@@ -92,7 +115,7 @@ async def create_storage(
         {
             "bean_type": bean_type.name,
             "quantity": request.quantity,
-            "warehouse_name": request.warehouse_name,
+            "warehouse_name": resolved_wh_name or request.warehouse_name,
         }
     )
 
@@ -103,6 +126,8 @@ async def create_storage(
         quantity_bags=storage.quantity_bags,
         quantity=float(storage.quantity),
         warehouse_name=storage.warehouse_name,
+        warehouse_id=storage.warehouse_id,
+        warehouse_name_resolved=resolved_wh_name,
         storage_date=storage.storage_date,
         notes=storage.notes,
         created_by=storage.created_by,
@@ -135,6 +160,16 @@ async def update_storage(
         storage.quantity = request.quantity
     if request.warehouse_name is not None:
         storage.warehouse_name = request.warehouse_name
+    if request.warehouse_id is not None:
+        wh_result = await db.execute(
+            select(Warehouse).where(Warehouse.id == request.warehouse_id)
+        )
+        warehouse = wh_result.scalar_one_or_none()
+        if warehouse:
+            storage.warehouse_id = request.warehouse_id
+            storage.warehouse_name = warehouse.name
+        else:
+            raise HTTPException(status_code=404, detail="Warehouse not found")
     if request.storage_date is not None:
         storage.storage_date = request.storage_date
     if request.notes is not None:
@@ -146,6 +181,13 @@ async def update_storage(
     bt_result = await db.execute(select(BeanType.name).where(BeanType.id == storage.bean_type_id))
     bt_name = bt_result.scalar_one_or_none()
 
+    resolved_wh = None
+    if storage.warehouse_id:
+        wh_result = await db.execute(
+            select(Warehouse.name).where(Warehouse.id == storage.warehouse_id)
+        )
+        resolved_wh = wh_result.scalar_one_or_none()
+
     await create_audit_log(db, str(user.id), "UPDATE", "storages", storage_id_str, None)
 
     return StorageResponse(
@@ -155,6 +197,8 @@ async def update_storage(
         quantity_bags=storage.quantity_bags,
         quantity=float(storage.quantity),
         warehouse_name=storage.warehouse_name,
+        warehouse_id=storage.warehouse_id,
+        warehouse_name_resolved=resolved_wh,
         storage_date=storage.storage_date,
         notes=storage.notes,
         created_by=storage.created_by,
