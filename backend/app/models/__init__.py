@@ -10,6 +10,7 @@ from app.models.weight_master import WeightMaster
 from app.models.bean_record import BeanRecord
 from app.models.purchase_order import PurchaseOrder, PurchaseOrderItem
 from app.models.supplier import Supplier
+from app.models.customer import Customer
 
 __all__ = [
     "Base",
@@ -25,4 +26,5 @@ __all__ = [
     "PurchaseOrder",
     "PurchaseOrderItem",
     "Supplier",
+    "Customer",
 ]

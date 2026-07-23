@@ -15,6 +15,7 @@ import {
   FiX,
   FiDatabase,
   FiShoppingCart,
+  FiUser,
 } from 'react-icons/fi'
 
 const navigation = [
@@ -22,6 +23,7 @@ const navigation = [
   { name: 'Bean Types', href: '/bean-types', icon: FiPackage },
   { name: 'Purchase Orders', href: '/purchase-orders', icon: FiShoppingCart },
   { name: 'Suppliers', href: '/suppliers', icon: FiUsers },
+  { name: 'Customers', href: '/customers', icon: FiUser },
   { name: 'အသားအလေးချိန်စာရင်း', href: '/weight-master', icon: FiList },
   { name: 'ပဲစာရင်း', href: '/bean-records', icon: FiDatabase },
   { name: 'Arrivals', href: '/arrivals', icon: FiTruck },

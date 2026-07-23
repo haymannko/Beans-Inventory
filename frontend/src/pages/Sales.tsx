@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useSales, useCreateSale, useUpdateSale, useDeleteSale } from '../hooks/useSales'
 import { useBeanTypes } from '../hooks/useBeanTypes'
+import { useCustomers } from '../hooks/useCustomers'
 import Modal from '../components/Modal'
 import toast from 'react-hot-toast'
 import { FiPlus, FiDollarSign, FiEdit2, FiTrash2 } from 'react-icons/fi'
@@ -13,6 +14,7 @@ export default function Sales() {
     bean_type_id: '',
     quantity_bags: '',
     quantity: '',
+    customer_id: '',
     customer_name: '',
     sale_price: '',
     invoice_no: '',
@@ -22,6 +24,7 @@ export default function Sales() {
 
   const { data: sales, isLoading } = useSales()
   const { data: beanTypes } = useBeanTypes()
+  const { data: customers } = useCustomers({ active_only: true })
   const createMutation = useCreateSale()
   const updateMutation = useUpdateSale()
   const deleteMutation = useDeleteSale()
@@ -31,6 +34,7 @@ export default function Sales() {
       bean_type_id: '',
       quantity_bags: '',
       quantity: '',
+      customer_id: '',
       customer_name: '',
       sale_price: '',
       invoice_no: '',
@@ -59,6 +63,7 @@ export default function Sales() {
       bean_type_id: sale.bean_type_id,
       quantity_bags: String(sale.quantity_bags),
       quantity: String(sale.quantity),
+      customer_id: sale.customer_id || '',
       customer_name: sale.customer_name || '',
       sale_price: String(sale.sale_price),
       invoice_no: sale.invoice_no || '',
@@ -74,6 +79,7 @@ export default function Sales() {
         bean_type_id: formData.bean_type_id,
         quantity_bags: parseInt(formData.quantity_bags) || 0,
         quantity: parseFloat(formData.quantity),
+        customer_id: formData.customer_id || undefined,
         customer_name: formData.customer_name || undefined,
         sale_price: parseFloat(formData.sale_price) || 0,
         invoice_no: formData.invoice_no || undefined,
@@ -102,6 +108,7 @@ export default function Sales() {
           bean_type_id: formData.bean_type_id,
           quantity_bags: parseInt(formData.quantity_bags) || 0,
           quantity: parseFloat(formData.quantity),
+          customer_id: formData.customer_id || undefined,
           customer_name: formData.customer_name || undefined,
           sale_price: parseFloat(formData.sale_price) || 0,
           invoice_no: formData.invoice_no || undefined,
@@ -200,10 +207,31 @@ export default function Sales() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Customer Name
+            Customer
           </label>
+          <select
+            value={formData.customer_id}
+            onChange={(e) => {
+              const custId = e.target.value
+              const cust = customers?.find((c) => c.id === custId)
+              setFormData({
+                ...formData,
+                customer_id: custId,
+                customer_name: cust?.name || '',
+              })
+            }}
+            className="input-field mb-2"
+          >
+            <option value="">-- Select existing customer --</option>
+            {customers?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} {c.phone ? `(${c.phone})` : ''}
+              </option>
+            ))}
+          </select>
           <input
             type="text"
+            placeholder="Or type a new customer name"
             value={formData.customer_name}
             onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
             className="input-field"

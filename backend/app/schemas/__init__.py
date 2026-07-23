@@ -19,6 +19,11 @@ from app.schemas.supplier import (
     SupplierUpdate,
     SupplierResponse,
 )
+from app.schemas.customer import (
+    CustomerCreate,
+    CustomerUpdate,
+    CustomerResponse,
+)
 
 __all__ = [
     "Token", "TokenData", "LoginRequest", "ChangePasswordRequest",
@@ -38,4 +43,7 @@ __all__ = [
     "SupplierCreate",
     "SupplierUpdate",
     "SupplierResponse",
+    "CustomerCreate",
+    "CustomerUpdate",
+    "CustomerResponse",
 ]

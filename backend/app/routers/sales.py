@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.deps import get_current_user
 from app.models.bean_type import BeanType
+from app.models.customer import Customer
 from app.models.sale import Sale
 from app.models.user import User
 from app.schemas.sale import SaleCreate, SaleResponse, SaleUpdate
@@ -79,6 +80,7 @@ async def list_sales(
             bean_type_name=bt_name,
             quantity_bags=sale.quantity_bags,
             quantity=float(sale.quantity),
+            customer_id=sale.customer_id,
             customer_name=sale.customer_name,
             sale_price=float(sale.sale_price),
             invoice_no=sale.invoice_no,
@@ -122,11 +124,24 @@ async def create_sale(
                 detail=f"Insufficient weight stock. Available: {current_stock:.2f} kg, requested: {request.quantity:.2f} kg",
             )
 
+    # Resolve customer name if customer_id is provided
+    customer_name = request.customer_name
+    customer_id = request.customer_id
+    if request.customer_id:
+        cust_result = await db.execute(
+            select(Customer).where(Customer.id == request.customer_id)
+        )
+        customer = cust_result.scalar_one_or_none()
+        if customer:
+            customer_name = customer.name
+            customer_id = customer.id
+
     sale = Sale(
         bean_type_id=str(request.bean_type_id),
         quantity_bags=request.quantity_bags,
         quantity=request.quantity,
-        customer_name=request.customer_name,
+        customer_id=customer_id,
+        customer_name=customer_name,
         sale_price=request.sale_price,
         invoice_no=request.invoice_no,
         sale_date=request.sale_date,
@@ -151,6 +166,7 @@ async def create_sale(
         bean_type_name=bean_type.name,
         quantity_bags=sale.quantity_bags,
         quantity=float(sale.quantity),
+        customer_id=sale.customer_id,
         customer_name=sale.customer_name,
         sale_price=float(sale.sale_price),
         invoice_no=sale.invoice_no,
@@ -186,6 +202,16 @@ async def update_sale(
         sale.quantity = request.quantity
     if request.customer_name is not None:
         sale.customer_name = request.customer_name
+    if request.customer_id is not None:
+        cust_result = await db.execute(
+            select(Customer).where(Customer.id == request.customer_id)
+        )
+        customer = cust_result.scalar_one_or_none()
+        if customer:
+            sale.customer_id = request.customer_id
+            sale.customer_name = customer.name
+        else:
+            raise HTTPException(status_code=404, detail=f"Customer '{request.customer_id}' not found")
     if request.sale_price is not None:
         sale.sale_price = request.sale_price
     if request.invoice_no is not None:
