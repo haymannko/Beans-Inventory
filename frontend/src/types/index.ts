@@ -297,6 +297,7 @@ export type PurchaseOrderStatus = 'draft' | 'approved' | 'ordered' | 'received' 
 export interface PurchaseOrder {
   id: string
   po_number: string
+  supplier_id: string | null
   supplier_name: string
   status: PurchaseOrderStatus
   order_date: string
@@ -318,6 +319,7 @@ export interface CreatePurchaseOrderItemRequest {
 
 export interface CreatePurchaseOrderRequest {
   supplier_name: string
+  supplier_id?: string
   status?: string
   order_date: string
   expected_delivery_date?: string
@@ -335,6 +337,7 @@ export interface UpdatePurchaseOrderItemRequest {
 
 export interface UpdatePurchaseOrderRequest {
   supplier_name?: string
+  supplier_id?: string
   order_date?: string
   expected_delivery_date?: string
   notes?: string
@@ -360,6 +363,58 @@ export interface PurchaseOrderFilters {
   start_date?: string
   end_date?: string
   search?: string
+  skip?: number
+  limit?: number
+}
+
+// ─── Suppliers ────────────────────────────────────────────────────────────────
+
+export interface RecentPurchaseOrder {
+  id: string
+  po_number: string
+  status: string
+  order_date: string
+  total_amount: number
+  item_count: number
+}
+
+export interface Supplier {
+  id: string
+  company_name: string
+  contact_person: string | null
+  phone: string | null
+  email: string | null
+  address: string | null
+  notes: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  purchase_order_count: number
+  recent_purchase_orders: RecentPurchaseOrder[]
+}
+
+export interface CreateSupplierRequest {
+  company_name: string
+  contact_person?: string
+  phone?: string
+  email?: string
+  address?: string
+  notes?: string
+}
+
+export interface UpdateSupplierRequest {
+  company_name?: string
+  contact_person?: string
+  phone?: string
+  email?: string
+  address?: string
+  notes?: string
+  is_active?: boolean
+}
+
+export interface SupplierFilters {
+  search?: string
+  active_only?: boolean
   skip?: number
   limit?: number
 }

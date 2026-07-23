@@ -14,6 +14,11 @@ from app.schemas.purchase_order import (
     PurchaseOrderStatusUpdate,
     ReceiveItemsRequest,
 )
+from app.schemas.supplier import (
+    SupplierCreate,
+    SupplierUpdate,
+    SupplierResponse,
+)
 
 __all__ = [
     "Token", "TokenData", "LoginRequest", "ChangePasswordRequest",
@@ -30,4 +35,7 @@ __all__ = [
     "PurchaseOrderResponse",
     "PurchaseOrderStatusUpdate",
     "ReceiveItemsRequest",
+    "SupplierCreate",
+    "SupplierUpdate",
+    "SupplierResponse",
 ]

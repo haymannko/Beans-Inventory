@@ -56,6 +56,7 @@ class PurchaseOrderItemResponse(BaseModel):
 
 class PurchaseOrderCreate(BaseModel):
     supplier_name: str = Field(..., min_length=1, max_length=200)
+    supplier_id: str | None = None
     status: str | None = "draft"
     order_date: date
     expected_delivery_date: date | None = None
@@ -65,6 +66,7 @@ class PurchaseOrderCreate(BaseModel):
 
 class PurchaseOrderUpdate(BaseModel):
     supplier_name: str | None = Field(None, min_length=1, max_length=200)
+    supplier_id: str | None = None
     order_date: date | None = None
     expected_delivery_date: date | None = None
     notes: str | None = None
@@ -72,7 +74,7 @@ class PurchaseOrderUpdate(BaseModel):
 
     @model_validator(mode="after")
     def ensure_at_least_one_field(self) -> "PurchaseOrderUpdate":
-        if not any([self.supplier_name, self.order_date, self.expected_delivery_date,
+        if not any([self.supplier_name, self.supplier_id, self.order_date, self.expected_delivery_date,
                      self.notes is not None, self.items is not None]):
             raise ValueError("At least one field must be provided for update")
         return self
@@ -94,6 +96,7 @@ class ReceiveItemsRequest(BaseModel):
 class PurchaseOrderResponse(BaseModel):
     id: str
     po_number: str
+    supplier_id: str | None = None
     supplier_name: str
     status: str
     order_date: date
