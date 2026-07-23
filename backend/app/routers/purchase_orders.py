@@ -14,6 +14,7 @@ from app.models.purchase_order import (
     PurchaseOrderItem,
     PurchaseOrderStatus,
 )
+from app.models.supplier import Supplier
 from app.models.user import User
 from app.models.weight_master import WeightMaster
 from app.schemas.purchase_order import (
@@ -103,6 +104,7 @@ async def _build_po_response(
     return {
         "id": po.id,
         "po_number": po.po_number,
+        "supplier_id": po.supplier_id,
         "supplier_name": po.supplier_name,
         "status": po.status,
         "order_date": po.order_date,
@@ -265,12 +267,25 @@ async def create_purchase_order(
                 detail=f"Bean type '{item.bean_type_id}' not found",
             )
 
+    # Resolve supplier name if supplier_id is provided
+    supplier_name = request.supplier_name
+    if request.supplier_id:
+        supplier_result = await db.execute(
+            select(Supplier).where(Supplier.id == request.supplier_id)
+        )
+        supplier = supplier_result.scalar_one_or_none()
+        if supplier:
+            supplier_name = supplier.company_name
+        else:
+            raise HTTPException(status_code=404, detail=f"Supplier '{request.supplier_id}' not found")
+
     # Generate PO number
     po_number = await _generate_po_number(db)
 
     po = PurchaseOrder(
         po_number=po_number,
-        supplier_name=request.supplier_name,
+        supplier_id=request.supplier_id,
+        supplier_name=supplier_name,
         status=request.status or PurchaseOrderStatus.DRAFT.value,
         order_date=request.order_date,
         expected_delivery_date=request.expected_delivery_date,
@@ -326,8 +341,21 @@ async def update_purchase_order(
             detail="Only draft or approved purchase orders can be edited",
         )
 
-    if request.supplier_name is not None:
+    if request.supplier_id is not None:
+        # supplier_id provided — resolve to company_name
+        supplier_result = await db.execute(
+            select(Supplier).where(Supplier.id == request.supplier_id)
+        )
+        supplier = supplier_result.scalar_one_or_none()
+        if supplier:
+            po.supplier_id = request.supplier_id
+            po.supplier_name = supplier.company_name
+        else:
+            raise HTTPException(status_code=404, detail=f"Supplier '{request.supplier_id}' not found")
+    elif request.supplier_name is not None:
         po.supplier_name = request.supplier_name
+        # Clear supplier_id if name is being set directly (no longer linked)
+        po.supplier_id = None
     if request.order_date is not None:
         po.order_date = request.order_date
     if request.expected_delivery_date is not None:

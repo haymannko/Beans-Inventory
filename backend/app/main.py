@@ -18,6 +18,7 @@ from app.routers import (
     reports,
     sales,
     storages,
+    suppliers,
     users,
     weight_master,
 )
@@ -58,6 +59,7 @@ app.include_router(audit_logs.router)
 app.include_router(weight_master.router)
 app.include_router(bean_records.router)
 app.include_router(purchase_orders.router)
+app.include_router(suppliers.router)
 app.include_router(backup.router)
 
 
@@ -144,6 +146,9 @@ async def _ensure_columns():
             ("avatar_url", "VARCHAR(500)"),
             ("auth_provider", "VARCHAR(20) DEFAULT 'local'"),
             ("last_login", "TIMESTAMPTZ"),
+        ],
+        "purchase_orders": [
+            ("supplier_id", "VARCHAR(36)"),
         ],
     }
 

@@ -21,6 +21,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: FiGrid },
   { name: 'Bean Types', href: '/bean-types', icon: FiPackage },
   { name: 'Purchase Orders', href: '/purchase-orders', icon: FiShoppingCart },
+  { name: 'Suppliers', href: '/suppliers', icon: FiUsers },
   { name: 'အသားအလေးချိန်စာရင်း', href: '/weight-master', icon: FiList },
   { name: 'ပဲစာရင်း', href: '/bean-records', icon: FiDatabase },
   { name: 'Arrivals', href: '/arrivals', icon: FiTruck },

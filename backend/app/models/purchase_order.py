@@ -41,6 +41,9 @@ class PurchaseOrder(Base):
     po_number: Mapped[str] = mapped_column(
         String(20), unique=True, nullable=False, index=True
     )
+    supplier_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("suppliers.id"), nullable=True, index=True
+    )
     supplier_name: Mapped[str] = mapped_column(String(200), nullable=False)
     status: Mapped[str] = mapped_column(
         String(10), nullable=False, default=PurchaseOrderStatus.DRAFT.value, index=True
@@ -62,6 +65,12 @@ class PurchaseOrder(Base):
     items: Mapped[list["PurchaseOrderItem"]] = relationship(
         back_populates="purchase_order",
         cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+    # Relationship to supplier (optional)
+    supplier: Mapped["Supplier | None"] = relationship(
+        back_populates="purchase_orders",
         lazy="selectin",
     )
 
