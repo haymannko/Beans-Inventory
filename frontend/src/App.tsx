@@ -18,6 +18,7 @@ import Boucher from './pages/Boucher'
 import BeanRecords from './pages/BeanRecords'
 import PurchaseOrders from './pages/PurchaseOrders'
 import Suppliers from './pages/Suppliers'
+import Customers from './pages/Customers'
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="bean-types" element={<BeanTypes />} />
           <Route path="purchase-orders" element={<PurchaseOrders />} />
           <Route path="suppliers" element={<Suppliers />} />
+          <Route path="customers" element={<Customers />} />
           <Route path="weight-master" element={<WeightMaster />} />
           <Route path="bean-records" element={<BeanRecords />} />
           <Route path="arrivals" element={<Arrivals />} />

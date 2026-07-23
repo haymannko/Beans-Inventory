@@ -37,6 +37,7 @@ export interface Sale {
   bean_type_name?: string
   quantity_bags: number
   quantity: number
+  customer_id: string | null
   customer_name: string | null
   sale_price: number
   invoice_no: string | null
@@ -189,6 +190,7 @@ export interface CreateSaleRequest {
   bean_type_id: string
   quantity_bags: number
   quantity: number
+  customer_id?: string
   customer_name?: string
   sale_price: number
   invoice_no?: string
@@ -200,6 +202,7 @@ export interface UpdateSaleRequest {
   bean_type_id?: string
   quantity_bags?: number
   quantity?: number
+  customer_id?: string
   customer_name?: string
   sale_price?: number
   invoice_no?: string
@@ -413,6 +416,59 @@ export interface UpdateSupplierRequest {
 }
 
 export interface SupplierFilters {
+  search?: string
+  active_only?: boolean
+  skip?: number
+  limit?: number
+}
+
+// ─── Customers ───────────────────────────────────────────────────────────────
+
+export interface RecentSale {
+  id: string
+  sale_date: string
+  bean_type_name: string | null
+  quantity: number
+  quantity_bags: number
+  sale_price: number
+  total_amount: number
+}
+
+export interface Customer {
+  id: string
+  name: string
+  phone: string | null
+  email: string | null
+  address: string | null
+  notes: string | null
+  is_active: boolean
+  outstanding_balance: number
+  created_at: string
+  updated_at: string
+  sale_count: number
+  total_purchases: number
+  recent_sales: RecentSale[]
+}
+
+export interface CreateCustomerRequest {
+  name: string
+  phone?: string
+  email?: string
+  address?: string
+  notes?: string
+}
+
+export interface UpdateCustomerRequest {
+  name?: string
+  phone?: string
+  email?: string
+  address?: string
+  notes?: string
+  is_active?: boolean
+  outstanding_balance?: number
+}
+
+export interface CustomerFilters {
   search?: string
   active_only?: boolean
   skip?: number

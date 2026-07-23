@@ -12,9 +12,10 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+from app.models.bean_type import BeanType
 
 
 class Sale(Base):
@@ -32,6 +33,9 @@ class Sale(Base):
     )
     quantity_bags: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     quantity: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    customer_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("customers.id"), nullable=True, index=True
+    )
     customer_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     sale_price: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     invoice_no: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -42,4 +46,12 @@ class Sale(Base):
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    # Relationships
+    customer: Mapped["Customer | None"] = relationship(
+        back_populates="sales", lazy="selectin"
+    )
+    bean_type: Mapped["BeanType"] = relationship(
+        lazy="selectin",
     )
