@@ -94,9 +94,9 @@ WEIGHT_MASTER_DATA = {
 }
 
 USERS = [
-    {"username": "admin", "password": "admin123", "role": UserRole.ADMIN},
-    {"username": "staff", "password": "staff123", "role": UserRole.STAFF},
-    {"username": "phay", "password": "99", "role": UserRole.STAFF},
+    {"username": "admin", "email": "haymannko@gmail.com", "password": "admin123", "role": UserRole.ADMIN},
+    {"username": "staff", "email": "staff@beans.local", "password": "staff123", "role": UserRole.STAFF},
+    {"username": "phay", "email": "phay@beans.local", "password": "99", "role": UserRole.STAFF},
 ]
 
 
@@ -160,6 +160,7 @@ async def seed_if_empty():
             logger.info(f"Creating user: {user_data['username']}")
             user = User(
                 username=user_data["username"],
+                email=user_data.get("email"),
                 password_hash=hash_password(user_data["password"]),
                 role=user_data["role"],
             )

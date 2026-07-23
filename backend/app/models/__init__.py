@@ -8,6 +8,7 @@ from app.models.stock_adjustment import StockAdjustment
 from app.models.audit_log import AuditLog
 from app.models.weight_master import WeightMaster
 from app.models.bean_record import BeanRecord
+from app.models.purchase_order import PurchaseOrder, PurchaseOrderItem
 
 __all__ = [
     "Base",
@@ -20,4 +21,6 @@ __all__ = [
     "AuditLog",
     "WeightMaster",
     "BeanRecord",
+    "PurchaseOrder",
+    "PurchaseOrderItem",
 ]

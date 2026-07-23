@@ -7,6 +7,13 @@ from app.schemas.storage import StorageCreate, StorageResponse
 from app.schemas.adjustment import AdjustmentCreate, AdjustmentResponse
 from app.schemas.dashboard import DashboardResponse
 from app.schemas.report import ReportRequest, ReportResponse
+from app.schemas.purchase_order import (
+    PurchaseOrderCreate,
+    PurchaseOrderUpdate,
+    PurchaseOrderResponse,
+    PurchaseOrderStatusUpdate,
+    ReceiveItemsRequest,
+)
 
 __all__ = [
     "Token", "TokenData", "LoginRequest", "ChangePasswordRequest",
@@ -18,4 +25,9 @@ __all__ = [
     "AdjustmentCreate", "AdjustmentResponse",
     "DashboardResponse",
     "ReportRequest", "ReportResponse",
+    "PurchaseOrderCreate",
+    "PurchaseOrderUpdate",
+    "PurchaseOrderResponse",
+    "PurchaseOrderStatusUpdate",
+    "ReceiveItemsRequest",
 ]
