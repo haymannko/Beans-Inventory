@@ -14,6 +14,14 @@ class StorageByWarehouse(BaseModel):
     quantity_bags: int
 
 
+class LowStockAlertItem(BaseModel):
+    bean_type_id: str
+    bean_type_name: str
+    current_stock_bags: int
+    min_stock_bags: int
+    email_enabled: bool = False
+
+
 class DashboardResponse(BaseModel):
     total_bean_types: int
     total_current_stock: float
@@ -24,7 +32,7 @@ class DashboardResponse(BaseModel):
     today_arrivals_bags: int = 0
     today_sales: float
     today_sales_bags: int = 0
-    low_stock_alerts: list[StockByBeanType]
+    low_stock_alerts: list[LowStockAlertItem]
     recent_transactions: list[dict]
     stock_by_type: list[StockByBeanType]
     monthly_sales: list[dict]

@@ -22,11 +22,13 @@ import {
   FiBookOpen,
   FiTrendingUp,
   FiClipboard,
+  FiAlertTriangle,
 } from 'react-icons/fi'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: FiGrid },
   { name: 'Bean Types', href: '/bean-types', icon: FiPackage },
+  { name: 'Stock Thresholds', href: '/stock-thresholds', icon: FiAlertTriangle },
   { name: 'Purchase Orders', href: '/purchase-orders', icon: FiShoppingCart },
   { name: 'Suppliers', href: '/suppliers', icon: FiUsers },
   { name: 'Customers', href: '/customers', icon: FiUser },

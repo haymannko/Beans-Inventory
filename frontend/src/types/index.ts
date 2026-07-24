@@ -115,6 +115,14 @@ export interface StorageByWarehouse {
   quantity_bags: number
 }
 
+export interface LowStockAlertItem {
+  bean_type_id: string
+  bean_type_name: string
+  current_stock_bags: number
+  min_stock_bags: number
+  email_enabled: boolean
+}
+
 export interface DashboardData {
   total_bean_types: number
   total_current_stock: number
@@ -125,11 +133,61 @@ export interface DashboardData {
   today_arrivals_bags: number
   today_sales: number
   today_sales_bags: number
-  low_stock_alerts: StockByBeanType[]
+  low_stock_alerts: LowStockAlertItem[]
   recent_transactions: Record<string, unknown>[]
   stock_by_type: StockByBeanType[]
   monthly_sales: { month: string; total: number }[]
   monthly_arrivals: { month: string; total: number }[]
+}
+
+// ─── Stock Thresholds ─────────────────────────────────────────────────────────
+
+export interface StockThresholdResponse {
+  id: string
+  bean_type_id: string
+  bean_type_name: string | null
+  min_stock_bags: number
+  min_stock_weight: number
+  email_enabled: boolean
+  alert_email: string | null
+  current_stock_bags: number
+  current_stock_weight: number
+  is_low_stock: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface StockThresholdCreate {
+  min_stock_bags: number
+  min_stock_weight: number
+  email_enabled: boolean
+  alert_email?: string | null
+}
+
+export interface StockThresholdUpdate {
+  min_stock_bags?: number | null
+  min_stock_weight?: number | null
+  email_enabled?: boolean | null
+  alert_email?: string | null
+}
+
+export interface LowStockAlert {
+  bean_type_id: string
+  bean_type_name: string
+  current_stock_bags: number
+  current_stock_weight: number
+  min_stock_bags: number
+  min_stock_weight: number
+  shortfall_bags: number
+  shortfall_weight: number
+  severity: 'info' | 'warning' | 'critical'
+}
+
+export interface StockAlertSummary {
+  total_thresholds: number
+  low_stock_count: number
+  critical_count: number
+  alerts: LowStockAlert[]
 }
 
 export interface ReportData {

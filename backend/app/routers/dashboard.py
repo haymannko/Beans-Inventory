@@ -10,11 +10,12 @@ from app.models.arrival import Arrival
 from app.models.bean_type import BeanType
 from app.models.sale import Sale
 from app.models.stock_adjustment import StockAdjustment
+from app.models.stock_threshold import StockThreshold
 from app.models.storage import Storage
 from app.models.user import User
 from app.models.warehouse import Warehouse
 from app.models.warehouse_transfer import WarehouseTransfer
-from app.schemas.dashboard import DashboardResponse, StockByBeanType
+from app.schemas.dashboard import DashboardResponse, LowStockAlertItem, StockByBeanType
 from app.services.inventory_service import get_all_stocks, get_all_stocks_bags, get_today_arrivals, get_today_arrivals_bags, get_today_sales, get_today_sales_bags
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
@@ -120,8 +121,24 @@ async def get_dashboard(
             storage_bags=storage_bags,
         ))
 
-    # Low stock alerts (stock < 10 bags)
-    low_stock_alerts = [s for s in stock_by_type if s.total_stock_bags < 10]
+    # Low stock alerts — based on configured thresholds, fallback to < 10 bags
+    threshold_result = await db.execute(
+        select(StockThreshold.bean_type_id, StockThreshold.min_stock_bags, StockThreshold.email_enabled)
+    )
+    thresholds = {t.bean_type_id: t for t in threshold_result.fetchall()}
+
+    low_stock_alerts = []
+    for s in stock_by_type:
+        threshold = thresholds.get(s.bean_type_id)
+        min_bags = threshold.min_stock_bags if threshold else 10
+        if s.total_stock_bags < min_bags:
+            low_stock_alerts.append(LowStockAlertItem(
+                bean_type_id=s.bean_type_id,
+                bean_type_name=s.bean_type_name,
+                current_stock_bags=s.total_stock_bags,
+                min_stock_bags=min_bags,
+                email_enabled=bool(threshold and threshold.email_enabled),
+            ))
 
     # Recent transactions (last 10 arrivals + sales)
     recent_arrivals = await db.execute(

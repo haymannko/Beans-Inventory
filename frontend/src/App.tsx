@@ -27,6 +27,7 @@ import CashBook from './pages/CashBook'
 import TrialBalance from './pages/TrialBalance'
 import FinancialReports from './pages/FinancialReports'
 import Ledger from './pages/Ledger'
+import StockThresholds from './pages/StockThresholds'
 
 export default function App() {
   return (
@@ -58,6 +59,7 @@ export default function App() {
           <Route path="trial-balance" element={<TrialBalance />} />
           <Route path="financial-reports" element={<FinancialReports />} />
           <Route path="ledger" element={<Ledger />} />
+          <Route path="stock-thresholds" element={<StockThresholds />} />
         </Route>
       </Routes>
     </ErrorBoundary>

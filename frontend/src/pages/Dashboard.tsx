@@ -1,10 +1,16 @@
+import { useState } from 'react'
 import { useDashboard } from '../hooks/useDashboard'
+import { useStockAlerts } from '../hooks/useStockThresholds'
 import StatCard from '../components/StatCard'
 import {
   FiPackage,
   FiTruck,
   FiDollarSign,
   FiArchive,
+  FiAlertTriangle,
+  FiAlertCircle,
+  FiEye,
+  FiBell,
 } from 'react-icons/fi'
 import {
   BarChart,
@@ -19,7 +25,9 @@ import {
 const COLORS = ['#22c55e', '#3b82f6', '#eab308', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316']
 
 export default function Dashboard() {
+  const [showAlerts, setShowAlerts] = useState(false)
   const { data: dashboard, isLoading } = useDashboard()
+  const { data: alertSummary } = useStockAlerts()
 
   if (isLoading) {
     return (
@@ -39,6 +47,77 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
         <p className="text-gray-500 dark:text-gray-400">Overview of your bean inventory</p>
       </div>
+
+      {/* Low Stock Alerts Banner */}
+      {alertSummary && alertSummary.low_stock_count > 0 && (
+        <div className="card border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-600">
+          <div className="flex items-start gap-3">
+            <FiAlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-medium text-amber-800 dark:text-amber-200">
+                  {alertSummary.low_stock_count} low stock alert{alertSummary.low_stock_count !== 1 ? 's' : ''}
+                  {alertSummary.critical_count > 0 && (
+                    <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                      <FiAlertCircle className="w-3 h-3" />
+                      {alertSummary.critical_count} critical
+                    </span>
+                  )}
+                </p>
+                <button
+                  onClick={() => setShowAlerts(!showAlerts)}
+                  className="text-xs text-amber-700 dark:text-amber-300 hover:underline whitespace-nowrap flex items-center gap-1"
+                >
+                  <FiEye className="w-3 h-3" />
+                  {showAlerts ? 'Hide' : 'View details'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {showAlerts && (
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {alertSummary.alerts.map((a) => {
+                const isCritical = a.severity === 'critical'
+                const isWarning = a.severity === 'warning'
+                return (
+                  <div
+                    key={a.bean_type_id}
+                    className={`flex items-start gap-2 p-2 rounded-lg text-sm ${
+                      isCritical
+                        ? 'bg-red-100 dark:bg-red-900/30'
+                        : isWarning
+                        ? 'bg-amber-100 dark:bg-amber-900/30'
+                        : 'bg-blue-100 dark:bg-blue-900/30'
+                    }`}
+                  >
+                    <span className={`p-1 rounded-full flex-shrink-0 ${
+                      isCritical ? 'text-red-600 bg-red-200 dark:bg-red-800' :
+                      isWarning ? 'text-amber-600 bg-amber-200 dark:bg-amber-800' :
+                      'text-blue-600 bg-blue-200 dark:bg-blue-800'
+                    }`}>
+                      {isCritical ? <FiAlertCircle className="w-3 h-3" /> :
+                       isWarning ? <FiAlertTriangle className="w-3 h-3" /> :
+                       <FiBell className="w-3 h-3" />}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{a.bean_type_name}</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        {a.current_stock_bags} bags / {a.min_stock_bags} min
+                      </p>
+                      {a.shortfall_bags > 0 && (
+                        <p className="text-xs font-medium text-red-600 dark:text-red-400">
+                          Shortfall: {a.shortfall_bags} bags
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

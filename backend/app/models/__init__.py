@@ -16,6 +16,7 @@ from app.models.warehouse_transfer import WarehouseTransfer
 from app.models.account import Account, AccountType
 from app.models.journal_entry import JournalEntry, JournalEntryLine
 from app.models.cash_book import CashBookEntry
+from app.models.stock_threshold import StockThreshold
 
 __all__ = [
     "Base",
@@ -39,4 +40,5 @@ __all__ = [
     "JournalEntry",
     "JournalEntryLine",
     "CashBookEntry",
+    "StockThreshold",
 ]

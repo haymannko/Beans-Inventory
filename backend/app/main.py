@@ -19,6 +19,7 @@ from app.routers import (
     purchase_orders,
     reports,
     sales,
+    stock_thresholds,
     storages,
     suppliers,
     transfers,
@@ -69,6 +70,7 @@ app.include_router(warehouses.router)
 app.include_router(transfers.router)
 app.include_router(backup.router)
 app.include_router(financial.router)
+app.include_router(stock_thresholds.router)
 
 
 @app.get("/", include_in_schema=False)
@@ -175,6 +177,13 @@ async def _ensure_columns():
     async with engine.begin() as conn:
         def migrate(connection):
             insp = inspect(connection)
+
+            # Create stock_thresholds table if it doesn't exist
+            existing_tables = insp.get_table_names()
+            if "stock_thresholds" not in existing_tables:
+                from app.models.stock_threshold import StockThreshold
+                StockThreshold.__table__.create(connection)
+                logger.info("Migration: created stock_thresholds table")
             for table, columns in migrations.items():
                 existing_tables = insp.get_table_names()
                 if table not in existing_tables:
